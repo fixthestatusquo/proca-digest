@@ -3,19 +3,42 @@ require('dotenv').config()
 const { subject, html, insertVariables } = require("./template");
 const { supabase } = require("./api");
 const getTargets = require("./targets").getTargets;
+const argv = require("minimist")(process.argv.slice(2), {
+  boolean: ["help"]
+});
 
 
-const campaign = "restorenaturepics";
-const templateName = "initialDigest";
-const sourceName = "restorenaturepics";
+const help = () => {
+  console.log(
+    [
+      "--help (this command)",
+      "--campaign (campaign name)",
+      "--template (template folder in config/email/digest/campaigName)",
+      "--source (source file in config/targets/source/)",
+    ].join("\n")
+  );
+  process.exit(0);
+};
+
+console.log(argv)
+
+if (argv.help) {
+  return help();
+}
+
+// remove after ||
+const campaign = argv["campaign"] ||  "restorenaturepics";
+const templateName = argv["template"] || "initialDigest";
+const sourceName = argv["source"] || "restorenaturepics";
 
 const targets = getTargets(sourceName);
 
 // it is set to send emails with gmail
-// usual pasword won't work, use app password https://support.google.com/accounts/answer/18583
+// usual pasword not working, use app password https://support.google.com/accounts/answer/18583
 
 const sendDigest = async (s, h, email) => {
   let transporter = nodemailer.createTransport({
+    // todo: put service  and host in .env
     service: "gmail",
     host: "smtp.gmail.com",
     port: 587,
@@ -29,11 +52,12 @@ const sendDigest = async (s, h, email) => {
 
   let info = await transporter.sendMail({
     from: '"Bruce Wayne 🦇" <bruce.wayne@gmail.com>', // sender address
-    to: "ivana@fixthestatusquo.org", // list of receivers
+    to: "xavierqq@fixthestatusquo.org", // list of receivers
     // to: email,
-    subject: s, // Subject line
+    subject: s,
+    //TO DO: add plain
     text: "Proca digest", // plain text body
-    html: h, // html body
+    html: h,
   });
 
   console.log("Message sent: %s", info.messageId);
