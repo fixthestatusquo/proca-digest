@@ -1,16 +1,19 @@
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
+
+const from = process.env.REACT_APP_TEMPLATES_FOLDER;
 
 const subject = (campaign, name, lang) => {
-  const p = path.resolve(__dirname, `../proca/config/email/digest/${campaign}/${name}.${lang}.json`);
+  const p = path.resolve(__dirname, from +`${campaign}/${name}/${lang}.json`);
   return JSON.parse(fs.readFileSync(p, "utf8")).meta.subject;
 };
 
 const html = (campaign, name, lang) => {
-  const p = path.resolve(__dirname, `../proca/config/email/digest/${campaign}/${name}.${lang}.html`);
+  const p = path.resolve(__dirname, from + `${campaign}/${name}/${lang}.html`);
   return fs.readFileSync(p, "utf8");
 };
 
-module.exports = { subject, html };
+console.log(subject("restorenaturepics", "initialDigest", "en"), html("restorenaturepics", "initialDigest", "en"));
 
-// config/email/digest/demo/initialDigest.en.json
+module.exports = { subject, html };
