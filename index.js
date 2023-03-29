@@ -1,7 +1,6 @@
 const nodemailer = require("nodemailer");
 require('dotenv').config()
-const subject = require("./template").subject;
-const html = require("./template").html;
+const { subject, html, insertVariables } = require("./template");
 const { supabase } = require("./api");
 const getTargets = require("./targets").getTargets;
 
@@ -14,8 +13,6 @@ const targets = getTargets(sourceName);
 
 // it is set to send emails with gmail
 // usual pasword won't work, use app password https://support.google.com/accounts/answer/18583
-
-
 
 const sendDigest = async (s, h, email) => {
   let transporter = nodemailer.createTransport({
@@ -40,12 +37,9 @@ const sendDigest = async (s, h, email) => {
   });
 
   console.log("Message sent: %s", info.messageId);
-  // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 
   // Preview only available when sending through an Ethereal account!!
-  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-  // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-
+  //console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 
   // add lang to template record?
   //we dont have target_id on source, use email instead???
@@ -63,7 +57,21 @@ const main = async () => {
     const target = targets[i];
     const s = subject(campaign, templateName, target.lang)
     const h = html(campaign, templateName, target.lang)
-    await sendDigest(s, h, target.email);
+
+    if (!s) {
+      console.error("Subject or HTML not found:", target);
+      // return;
+    } else if (!h) {
+      console.error("Subject or HTML not found:", target);
+      // return;
+    } else {
+
+      // fetch variables
+      // insert variables in template
+      insertVariables(h, variables = "");
+
+      await sendDigest(s, h, target.email);
+    }
   }
 }
 

@@ -13,6 +13,13 @@ const subject = (campaign, name, lang) => {
   return JSON.parse(fs.readFileSync(p, "utf8")).meta.subject;
 };
 
+const insertVariables = (template, variables) => {
+
+  // insert variables in templates code here
+
+  return template;
+};
+
 const html = (campaign, name, lang) => {
   const p = path.resolve(__dirname, from + `${campaign}/${name}/${lang}.html`);
   if (!fs.existsSync(p)) {
@@ -22,6 +29,5 @@ const html = (campaign, name, lang) => {
   return fs.readFileSync(p, "utf8");
 };
 
-// insert variables in templates code here
 
-module.exports = { subject, html };
+module.exports = { subject, html, insertVariables };
