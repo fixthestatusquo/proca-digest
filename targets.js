@@ -36,9 +36,7 @@ const languages = {
   no: "nb_NO",
 };
 
-const fileName = 'restorenaturepics';
-
-const targets = (fileName) => {
+const getTargets = (fileName) => {
   const p = path.resolve(__dirname, source + `${fileName}.json`);
   const o = Object.values(JSON.parse(fs.readFileSync(p, "utf8")).filter(value => Object.keys(value).length !== 0))
   for (const i in o) {
@@ -57,5 +55,5 @@ const targets = (fileName) => {
   return o;
 }
 
-module.exports = { targets };
+module.exports = { getTargets };
 
