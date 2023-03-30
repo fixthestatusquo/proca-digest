@@ -22,9 +22,7 @@ const help = () => {
 
 console.log(argv)
 
-if (argv.help) {
-  return help();
-}
+if (argv.help) return help();
 
 // remove after ||
 const campaign = argv["campaign"] ||  "restorenaturepics";
