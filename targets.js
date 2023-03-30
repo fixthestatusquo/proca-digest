@@ -2,8 +2,9 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-const source = process.env.REACT_APP_TARGETS_FOLDER;
+const source = process.env.REACT_APP_TARGETS_FOLDER || process.env.REACT_APP_CONFIG_FOLDER + 'target/source/';
 
+// import from proca instead of duplicating
 const languages = {
   be: ["fr", "nl"],
   gr: "el",

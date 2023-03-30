@@ -4,7 +4,8 @@ const { subject, html, insertVariables } = require("./template");
 const { supabase } = require("./api");
 const getTargets = require("./targets").getTargets;
 const argv = require("minimist")(process.argv.slice(2), {
-  boolean: ["help"]
+  boolean: ["help","dry-run"],
+  default: {"template":"default"}
 });
 
 
@@ -12,44 +13,46 @@ const help = () => {
   console.log(
     [
       "--help (this command)",
-      "--campaign (campaign name)",
-      "--template (template folder in config/email/digest/campaigName)",
+      "--template (template folder in config/email/digest/campaigName), by default default.xx.html",
       "--source (source file in config/targets/source/)",
+      "--dry-run",
+      "{campaign_name}",
     ].join("\n")
   );
   process.exit(0);
 };
 
-console.log(argv)
+const campaign = argv._[0];
 
-if (argv.help) return help();
+if (argv.help || !campaign) return help();
 
-// remove after ||
-const campaign = argv["campaign"] ||  "restorenaturepics";
-const templateName = argv["template"] || "initialDigest";
-const sourceName = argv["source"] || "restorenaturepics";
+if (!argv.source) argv.source = campaign;
+const templateName = argv["template"] || "initialDigest"; // TODO: for each target, check if the target has received an email, "initial", otherwise, "default"
+const sourceName = argv["source"];
 
 const targets = getTargets(sourceName);
-
+console.log("targetting ", targets.length, " from ", sourceName);
 // it is set to send emails with gmail
 // usual pasword not working, use app password https://support.google.com/accounts/answer/18583
 
-const sendDigest = async (s, h, email) => {
-  let transporter = nodemailer.createTransport({
-    // todo: put service  and host in .env
-    service: "gmail",
-    host: "smtp.gmail.com",
+
+const transporter = nodemailer.createTransport({
+    // todo: put service  and host in .env ...or config on proca?
+//    service: "gmail",
+    host: process.env.SMTP_HOST,
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASS,
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
     },
   });
 
 
+const sendDigest = async (s, h, email) => {
+
   let info = await transporter.sendMail({
-    from: '"Bruce Wayne 🦇" <bruce.wayne@gmail.com>', // sender address
+    from: '"Bruce Wayne 🦇" <bruce.wayne@gmail.com>', // sender address TODO: take from campaign.config
     to: "xavierqq@fixthestatusquo.org", // list of receivers
     // to: email,
     subject: s,
@@ -58,11 +61,16 @@ const sendDigest = async (s, h, email) => {
     html: h,
   });
 
-  console.log("Message sent: %s", info.messageId);
-
+  if (transporter.getTestMessageUrl) {
+    console.log("Message sent: %s", info.messageId);
+    console.log("Preview URL: %s", transporter.getTestMessageUrl(info));
+  }
   // Preview only available when sending through an Ethereal account!!
   //console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 
+  if (argv.dry-run) {
+    return;
+  }
   // add lang to template record?
   //we dont have target_id on source, use email instead???
     const { data, error } = await supabase
@@ -79,7 +87,7 @@ const main = async () => {
     const target = targets[i];
     const s = subject(campaign, templateName, target.lang)
     const h = html(campaign, templateName, target.lang)
-
+    
     if (!s) {
       console.error("Subject or HTML not found:", target);
       // return;
@@ -93,6 +101,8 @@ const main = async () => {
       insertVariables(h, variables = "");
 
       await sendDigest(s, h, target.email);
+
+process.exit(1);
     }
   }
 }

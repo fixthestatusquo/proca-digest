@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-const from = process.env.REACT_APP_TEMPLATES_FOLDER;
+const from = process.env.REACT_APP_TEMPLATES_FOLDER || process.env.REACT_APP_CONFIG_FOLDER + 'email/digest/';
 
 const subject = (campaign, name, lang) => {
   const p = path.resolve(__dirname, from + `${campaign}/${name}/${lang}.json`);
