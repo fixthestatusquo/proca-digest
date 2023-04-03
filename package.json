@@ -9,6 +9,8 @@
     "nodemailer": "^6.9.1"
   },
   "scripts": {
-    "start": "node index.js"
+    "prepare": "node prepare.js",
+    "preview": "node preview.js",
+    "process": "node send.js"
   }
 }

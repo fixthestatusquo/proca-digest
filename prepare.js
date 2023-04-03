@@ -41,10 +41,15 @@ console.log("targetting ", targets.length, " from ", sourceName);
 
   // add lang to template record?
   //we dont have target_id on source, use email instead???
+
+const prepare = (target, templateName,campaign) => {
+    const s = subject(campaign, templateName, target.lang)
+    const h = html(campaign, templateName, target.lang)
+
   const { data, error } = await supabase
   .from('digest')
   .insert([
-    { subject: s, body: h, status: "sent", template: "templateName", email: "someEmail@mail.com", target_id: "123e4567-e89b-12d3-a456-426614174000", variables: {} }// , template: `${campaign}/${name}` },
+    { subject: s, body: h, status: "sent", template: templateName, email: "someEmail@mail.com", target_id: "123e4567-e89b-12d3-a456-426614174000", variables: {},status:'pending' }// , template: `${campaign}/${name}` },
   ])
 
   if (error) console.log('error saving template', error)
@@ -53,9 +58,9 @@ console.log("targetting ", targets.length, " from ", sourceName);
 const main = async () => {
   for (const i in targets) {
     const target = targets[i];
-    const s = subject(campaign, templateName, target.lang)
-    const h = html(campaign, templateName, target.lang)
-    
+    // todo: if template not set, fetch email,target_id from digests where campaign=campaign and status='sent' group by email
+    // if in that list -> template= default, else -> initial
+    prepare (targets[i], "initial");
     if (!s) {
       console.error("Subject or HTML not found:", target);
       // return;
