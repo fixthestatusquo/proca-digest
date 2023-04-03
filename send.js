@@ -2,12 +2,12 @@ const nodemailer = require("nodemailer");
 require('dotenv').config()
 const { subject, html, insertVariables } = require("./template");
 const { supabase } = require("./api");
-const getTargets = require("./targets").getTargets;
 const argv = require("minimist")(process.argv.slice(2), {
   boolean: ["help","dry-run"],
   default: {"template":"default"}
 });
 
+const { supabase } = require("./api");
 
 const help = () => {
   console.log(
@@ -26,11 +26,6 @@ const campaign = argv._[0];
 
 if (argv.help || !campaign) return help();
 
-if (!argv.source) argv.source = campaign;
-const templateName = argv["template"] || "initialDigest"; // TODO: for each target, check if the target has received an email, "initial", otherwise, "default"
-const sourceName = argv["source"];
-
-const targets = getTargets(sourceName);
 console.log("targetting ", targets.length, " from ", sourceName);
 // it is set to send emails with gmail
 // usual pasword not working, use app password https://support.google.com/accounts/answer/18583
@@ -49,16 +44,16 @@ const transporter = nodemailer.createTransport({
   });
 
 
-const sendDigest = async (s, h, email) => {
+const sendDigest = async (digest) => {
 
   let info = await transporter.sendMail({
     from: '"Bruce Wayne 🦇" <bruce.wayne@gmail.com>', // sender address TODO: take from campaign.config
     to: "xavierqq@fixthestatusquo.org", // list of receivers
     // to: email,
-    subject: s,
+    subject: digest.subject,
     //TO DO: add plain
     text: "Proca digest", // plain text body
-    html: h,
+    html: digest.html,
   });
 
   if (transporter.getTestMessageUrl) {
@@ -71,36 +66,20 @@ const sendDigest = async (s, h, email) => {
   if (argv.dry-run) {
     return;
   }
-  // add lang to template record?
-  //we dont have target_id on source, use email instead???
     const { data, error } = await supabase
-  .from('digest')
-  .insert([
-    { subject: s, body: h, status: "sent", template: "templateName", email: "someEmail@mail.com", target_id: "123e4567-e89b-12d3-a456-426614174000", variables: {} }// , template: `${campaign}/${name}` },
-  ])
+  .update('digest')
+  .set('status','sent')
+  .where(id,digest.id)
 
-  if (error) console.log('error saving template', error)
 }
 
 const main = async () => {
-  for (const i in targets) {
-    const target = targets[i];
-    const s = subject(campaign, templateName, target.lang)
-    const h = html(campaign, templateName, target.lang)
-    
-    if (!s) {
-      console.error("Subject or HTML not found:", target);
-      // return;
-    } else if (!h) {
-      console.error("Subject or HTML not found:", target);
-      // return;
-    } else {
 
-      // fetch variables
-      // insert variables in template
-      insertVariables(h, variables = "");
+  const { data: digests, error } = await supabase.select('*').from('digest').eq('status','pending').eq('campaign',campaign);
 
-      await sendDigest(s, h, target.email);
+  for (const i in digests) {
+    const digest = digests[i];
+      await sendDigest(digest);
 
 process.exit(1);
     }

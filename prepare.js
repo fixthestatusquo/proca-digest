@@ -42,9 +42,20 @@ console.log("targetting ", targets.length, " from ", sourceName);
   // add lang to template record?
   //we dont have target_id on source, use email instead???
 
-const prepare = (target, templateName,campaign) => {
+const prepare = async (target, templateName,campaign) => {
     const s = subject(campaign, templateName, target.lang)
     const h = html(campaign, templateName, target.lang)
+    if (!s) {
+      console.error("Subject not found:", target);
+      throw new Error("Subject not found:", target);
+    }
+    if (!h) {
+      console.error("HTML not found:", target);
+      throw new Error("HTML not found:", target);
+    }
+      // fetch variables
+      // insert variables in template
+    insertVariables(h, variables = "");
 
   const { data, error } = await supabase
   .from('digest')
@@ -58,22 +69,9 @@ const prepare = (target, templateName,campaign) => {
 const main = async () => {
   for (const i in targets) {
     const target = targets[i];
-    // todo: if template not set, fetch email,target_id from digests where campaign=campaign and status='sent' group by email
+    // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
     prepare (targets[i], "initial");
-    if (!s) {
-      console.error("Subject or HTML not found:", target);
-      // return;
-    } else if (!h) {
-      console.error("Subject or HTML not found:", target);
-      // return;
-    } else {
-
-      // fetch variables
-      // insert variables in template
-      insertVariables(h, variables = "");
-
-      await sendDigest(s, h, target.email);
 
 process.exit(1);
     }
