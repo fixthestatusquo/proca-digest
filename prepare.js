@@ -27,7 +27,7 @@ const campaign = argv._[0];
 if (argv.help || !campaign) return help();
 
 if (!argv.source) argv.source = campaign;
-const templateName = argv["template"] || "initialDigest"; // TODO: for each target, check if the target has received an email, "initial", otherwise, "default"
+let templateName = argv["template"] || "default"; // TODO: for each target, check if the target has received an email, "initial", otherwise, "default"
 const sourceName = argv["source"];
 
 const targets = getTargets(sourceName);
@@ -41,8 +41,25 @@ console.log("targetting ", targets.length, " from ", sourceName);
 
   // add lang to template record?
   //we dont have target_id on source, use email instead???
+/*
+    "externalId": "recJ8DP6xzKIMaIJd",
+    "name": "Achille VARIATI",
+    "email": "achille.variati@europarl.eu",
+    "area": "IT",
+    "field": {
+      "epid": 239257,
+      "gender": "M",
+      "eugroup": "S&D",
+      "party": "Partito Democratico",
+      "sort": "variati achille"
+    }
+*/
 
 const prepare = async (target, templateName,campaign) => {
+    if (!target.lang && argv.lang) {
+      console.warn("no language for ",target.email);
+    }
+    const lang=target.lang|| argv.lang;
     const s = subject(campaign, templateName, target.lang)
     const h = html(campaign, templateName, target.lang)
     if (!s) {
@@ -60,7 +77,7 @@ const prepare = async (target, templateName,campaign) => {
   const { data, error } = await supabase
   .from('digest')
   .insert([
-    { subject: s, body: h, status: "sent", template: templateName, email: "someEmail@mail.com", target_id: "123e4567-e89b-12d3-a456-426614174000", variables: {},status:'pending' }// , template: `${campaign}/${name}` },
+    { subject: s, body: h, status: "pending", template: templateName, email: target.email, target_id: target.externalId||target.email, variables: {} }// , template: `${campaign}/${name}` },
   ])
 
   if (error) console.log('error saving template', error)
@@ -71,7 +88,7 @@ const main = async () => {
     const target = targets[i];
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
-    prepare (targets[i], "initial");
+    prepare (targets[i], templateName);
 
 process.exit(1);
     }
