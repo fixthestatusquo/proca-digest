@@ -1,13 +1,10 @@
 const nodemailer = require("nodemailer");
 require('dotenv').config()
-const { subject, html, insertVariables } = require("./template");
 const { supabase } = require("./api");
 const argv = require("minimist")(process.argv.slice(2), {
   boolean: ["help","dry-run"],
   default: {"template":"default"}
 });
-
-const { supabase } = require("./api");
 
 const help = () => {
   console.log(
@@ -24,13 +21,6 @@ const help = () => {
 
 const campaign = argv._[0];
 
-if (argv.help || !campaign) return help();
-
-console.log("targetting ", targets.length, " from ", sourceName);
-// it is set to send emails with gmail
-// usual pasword not working, use app password https://support.google.com/accounts/answer/18583
-
-
 const transporter = nodemailer.createTransport({
     // todo: put service  and host in .env ...or config on proca?
 //    service: "gmail",
@@ -45,6 +35,7 @@ const transporter = nodemailer.createTransport({
 
 
 const sendDigest = async (digest) => {
+  console.log("sending digest", digest.id)
 
   let info = await transporter.sendMail({
     from: '"Bruce Wayne 🦇" <bruce.wayne@gmail.com>', // sender address TODO: take from campaign.config
@@ -63,27 +54,30 @@ const sendDigest = async (digest) => {
   // Preview only available when sending through an Ethereal account!!
   //console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 
-  if (argv.dry-run) {
+  if (argv["dry-run"]) {
     return;
   }
-    const { data, error } = await supabase
-  .update('digest')
-  .set('status','sent')
-  .where(id,digest.id)
+
+  const id = digest.id;
+  const { data, error } = await supabase
+      .from('digest')
+    .update({ 'status': 'sent' })
+    .match({ id: id })
+
+  if (error) console.log("error updating digest", id, error)
 
 }
 
 const main = async () => {
-
-  const { data: digests, error } = await supabase.select('*').from('digest').eq('status','pending').eq('campaign',campaign);
-
+console.log("sending digests for campaign", campaign)
+  const { data: digests, error } = await supabase.from('digest').select('*').eq('status','pending').eq('campaign',campaign);
+console.log("found ", digests.length, " digests to send")
   for (const i in digests) {
     const digest = digests[i];
       await sendDigest(digest);
-
-process.exit(1);
-    }
   }
-}
+  process.exit(1);
+  }
+
 
 main().catch(console.error);

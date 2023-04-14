@@ -2,7 +2,9 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-const source = process.env.REACT_APP_TARGETS_FOLDER || process.env.REACT_APP_CONFIG_FOLDER + 'target/source/';
+const source =
+  process.env.REACT_APP_TARGETS_FOLDER ||
+  process.env.REACT_APP_CONFIG_FOLDER + "target/source/";
 
 // import from proca instead of duplicating
 const languages = {
@@ -39,22 +41,14 @@ const languages = {
 
 const getTargets = (fileName) => {
   const p = path.resolve(__dirname, source + `${fileName}.json`);
-  const o = Object.values(JSON.parse(fs.readFileSync(p, "utf8")).filter(value => Object.keys(value).length !== 0))
-  for (const i in o) {
-    let item = o[i];
-    if (item?.field?.lang) {
-      o[i] = { email: item.email, lang: item.field.lang };
-    } else {
-      const area = item.area?.toLowerCase();
-      if (!area) {
-        console.error("No area, and no lang for:", item);
-        return;
-      }
-      o[i] = { email: item.email, lang: languages[area]}
-    };
+  const targets = JSON.parse(fs.readFileSync(p, "utf8")).filter((d) => d.email);
+  targets.forEach((d) => {
+    if (!d.locale) {
+      d.locale =
+        typeof languages[d.area.toLowerCase()] === "string" ? languages[d.area.toLowerCase()] : null;
     }
-  return o;
-}
+  });
+  return targets;
+};
 
 module.exports = { getTargets };
-
