@@ -3,6 +3,8 @@ const { subject, html, getTokens, insertVariables } = require("./template");
 const { supabase, getTargets: getDigested } = require("./api");
 const getTargets = require("./targets").getTargets;
 const color = require("cli-color");
+const countries=require("i18n-iso-countries");
+
 const argv = require("minimist")(process.argv.slice(2), {
   boolean: ["help", "dry-run", "verbose"],
   default: { template: "default" },
@@ -78,7 +80,7 @@ const prepare = async (target, templateName, campaign) => {
   }
   const locale = target.locale || argv.locale;
   let variables = {target:{ ...target.field,...target },
-    country: {code: target.area, name: "XXXXXXXXXXXXXXXXXXX"+target.area},
+    country: {code: target.area, name: countries.getName(target.area, locale) || ""},
     total: "MISSING",
     top: {
     }
