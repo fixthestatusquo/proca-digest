@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { subject, html, insertVariables } = require("./template");
+const { subject, html, getTokens, insertVariables } = require("./template");
 const { supabase, getTargets: getDigested } = require("./api");
 const getTargets = require("./targets").getTargets;
 const color = require("cli-color");
@@ -18,6 +18,7 @@ const help = () => {
       "--force process even if there are already pending digests waiting to be sent",
       "--dry-run",
       "--verbose",
+      "--target= email@example.org or number of targets to process",
       "{campaign_name}",
     ].join("\n")
   );
@@ -68,7 +69,7 @@ console.log(
   color.green("timestamp of the digest", dateFormat(createdAt)),
   createdAt.toString()
 );
-const targets = getTargets(sourceName);
+let targets = getTargets(sourceName);
 console.log("targetting ", targets.length, " from ", sourceName);
 
 const prepare = async (target, templateName, campaign) => {
@@ -76,31 +77,38 @@ const prepare = async (target, templateName, campaign) => {
     console.warn("no language for ", target.email);
   }
   const locale = target.locale || argv.locale;
-  let variables = { ...target.field,...target };
-  delete variables.email;
-  delete variables.externalId;
-  delete variables.field;
+  let variables = {target:{ ...target.field,...target },
+    country: {code: target.area, name: "XXXXXXXXXXXXXXXXXXX"+target.area},
+    total: "MISSING",
+    top: {
+    }
+  };
+  delete variables.target.email;
+  delete variables.target.externalId;
+  delete variables.target.field;
   const s = subject(campaign, templateName, locale);
-  const h = html(campaign, templateName, locale);
+  const template = html(campaign, templateName, locale);
+  const tokens = getTokens (template);
+console.log("ivana, we need variables for each of these",tokens);
   if (!s) {
     console.error("Subject not found:", target);
     throw new Error("Subject not found:", target);
   }
-  if (!h) {
+  if (!template) {
     console.error("HTML not found:", target);
     throw new Error("HTML not found:", target);
   }
   // fetch variables
   // insert variables in template
-  insertVariables(h, (variables));
-
+  const body = insertVariables(template, variables);
+//console.log(body);
   if (argv.verbose) console.log(target.email, locale, templateName, s);
   if (argv["dry-run"]) return;
   const { data, error } = await supabase.from("digest").insert([
     {
       created_at: createdAt,
       subject: s,
-      body: h,
+      body: body,
       status: "pending",
       template: templateName,
       campaign: campaign,
@@ -129,13 +137,19 @@ const main = async () => {
       process.exit(1);
     }
   }
+  if (parseInt(argv.target,10) > 0) {
+    console.log("...but processing only ", argv.target);
+    targets = targets.slice(0,argv.target);
+  } else if (argv.target.length >0) {
+    console.log("...but processing only ", argv.target);
+    const d = targets.find( d => d.email === argv.target);
+    targets = [d];
+  }
   for (const i in targets) {
     const target = targets[i];
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
     await prepare(targets[i], templateName, campaign);
-
-    process.exit(1);
   }
 };
 
