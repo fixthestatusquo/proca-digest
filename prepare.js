@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { subject, html, getTokens, insertVariables } = require("./template");
-const { supabase, getDigests, getTopPics } = require("./api");
+const { supabase, getDigests, getTopPics, getTopComments } = require("./api");
 const {getTargets, filter} = require("./targets");
 const color = require("cli-color");
 const countries=require("i18n-iso-countries");
@@ -83,12 +83,14 @@ const prepare = async (target, templateName, campaign) => {
   let variables = {target:{ ...target.field,...target },
     country: {code: target.area, name: countries.getName(target.area, locale) || ""},
     total: "MISSING",
-    top: { picturess: await getTopPics(campaign, target.area), comments: "" },
+    top: { pictures: await getTopPics(campaign, target.area), comments: await getTopComments(campaign, target.area) },
   };
   delete variables.target.email;
   delete variables.target.externalId;
   delete variables.target.field;
+
   console.log("variables", variables)
+
   const s = subject(campaign, templateName, locale);
   const template = html(campaign, templateName, locale);
   const tokens = getTokens (template);
@@ -110,8 +112,8 @@ console.log("ivana, we need variables for each of these",tokens);
   if (argv["dry-run"]) return;
 
 
-  // DON'T SEND IF THERE IS NO TOP 3??
-  if (variables.top.pictures === "") return; //|| variables.top.comments === ""
+  // DON'T SAVE TO SUPABASE IF THERE IS NO TOP 3??
+  if (variables.top.pictures === "" || variables.top.comments === "") return;
 
   const { data, error } = await supabase.from("digest").insert([
     {

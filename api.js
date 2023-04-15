@@ -57,5 +57,32 @@ const getTopPics = async (campaign, area) => {
   });
   return topPics;
 }
+const getTopComments = async (campaign, area) => {
+  console.log("getting top comments for ", campaign, area)
 
-module.exports = { supabase, getDigests, getTopPics };
+  const { data, error } = await supabase
+    .from('comments')
+    .select("*")
+    .eq("campaign", campaign)
+    .ilike("area", area)
+    .is("star", true)
+    .limit(3)
+
+  if (error) console.log("error getting top comments", error)
+
+  if (data.length < 3) {
+    console.log("no top pics for ", campaign, area);
+    return "";
+  }
+
+  let topComments = "";
+
+  data.map((comment) => {
+    console.log("comment", comment)
+    topComments += `<p><b>${comment.name.split(",")[0]}: </b>${comment.comment}</p>`
+  });
+  return topComments;
+}
+
+
+module.exports = { supabase, getDigests, getTopPics, getTopComments, getTargets };
