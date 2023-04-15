@@ -3,18 +3,34 @@ const nodemailer = require("nodemailer");
 
 let transporter = undefined;
 
-const initPreview = () => {
-  const [user, password] = process.env.ETHEREAL_ACCOUNT.split(":");
+const previewUrl = (info) => {
+  if (nodemailer.getTestMessageUrl) {
+    return nodemailer.getTestMessageUrl(info);
+  }
+  }
 
-  transporter = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    secure: true,
-    auth: {
-      user: user,
-      pass: password,
-    },
+const initPreview = async () => {
+  return new Promise((resolve, reject) => {
+    nodemailer.createTestAccount((err, account) => {
+      if (err) {
+        console.error("Failed to create a testing account. " + err.message);
+        reject("Failed to create a testing account. " + err.message);
+      }
+      console.log(account.user, "test credentials obtained");
+
+      // Create a SMTP transporter object
+      transporter = nodemailer.createTransport({
+        host: account.smtp.host,
+        port: account.smtp.port,
+        secure: account.smtp.secure,
+        auth: {
+          user: account.user,
+          pass: account.pass,
+        },
+      });
+      resolve(transporter);
+    });
   });
-  return transporter;
 };
 
 const init = (config) => {
@@ -32,21 +48,26 @@ const init = (config) => {
   return transporter;
 };
 
-const sendDigest = async (s, h, email) => {
-  let info = await transporter.sendMail({
-    from: '"Bruce Wayne 🦇" <bruce.wayne@gmail.com>', // sender address TODO: take from campaign.config
-    to: "xavierqq@fixthestatusquo.org", // list of receivers
-    // to: email,
-    subject: s,
-    //TO DO: add plain
-    text: "Proca digest", // plain text body
-    html: h,
-  });
-
-  if (transporter.getTestMessageUrl) {
-    console.log("Message sent: %s", info.messageId);
-    console.log("Preview URL: %s", transporter.getTestMessageUrl(info));
-  }
+const sendDigest = async (email, subject, body) => {
+  return new Promise((resolve, reject) => {
+  transporter.sendMail(
+    {
+      from: '"Bruce Wayne 🦇" <bruce.wayne@gmail.com>', // sender address TODO: take from campaign.config
+      to: transporter.transporter.auth.user, // list of receivers
+      to: email,
+      subject: subject,
+      //TO DO: add plain
+      html: body,
+    },
+    (err, info) => {
+      if (err) {
+        console.log("Error occurred. " + err.message);
+        reject("Error occurred. " + err.message);
+      }
+      return resolve(info);
+    }
+  );
+});
 };
 
-module.exports = { sendDigest, init, initPreview };
+module.exports = { sendDigest, init, initPreview, previewUrl };
