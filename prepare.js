@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { subject, html, getTokens, insertVariables } = require("./template");
-const { supabase, getTargets: getDigested, getTopPics } = require("./api");
+const { supabase, getDigests, getTopPics } = require("./api");
 const {getTargets, filter} = require("./targets");
 const color = require("cli-color");
 const countries=require("i18n-iso-countries");
@@ -108,6 +108,11 @@ console.log("ivana, we need variables for each of these",tokens);
 //console.log(body);
   if (argv.verbose) console.log(target.email, locale, templateName, s);
   if (argv["dry-run"]) return;
+
+
+  // DON'T SEND IF THERE IS NO TOP 3??
+  if (variables.top.pictures === "") return; //|| variables.top.comments === ""
+
   const { data, error } = await supabase.from("digest").insert([
     {
       created_at: createdAt,
@@ -129,7 +134,7 @@ console.log("ivana, we need variables for each of these",tokens);
 };
 
 const main = async () => {
-  const pending = await getDigested(campaign, "pending");
+  const pending = await getDigests(campaign, "pending");
   if (pending.length > 0) {
     console.log("targetted already ", pending.length, " from ", sourceName);
     if (!argv.force && !argv["dry-run"]) {
