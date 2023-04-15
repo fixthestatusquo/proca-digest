@@ -92,6 +92,7 @@ const prepare = async (target, templateName, campaign) => {
   const s = subject(campaign, templateName, locale);
   const template = html(campaign, templateName, locale);
   const tokens = getTokens (template);
+if (argv.verbose)
 console.log("ivana, we need variables for each of these",tokens);
   if (!s) {
     console.error("Subject not found:", target);

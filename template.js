@@ -34,7 +34,7 @@ const subject = (campaign, name, lang) => {
 };
 
 const insertVariables = (template, variables) => {
-console.log(variables);
+//console.log(variables);
   // insert variables in templates code here
   return i18next.t(template,variables);
 };
