@@ -50,5 +50,20 @@ const getTargets = (fileName) => {
   });
   return targets;
 };
+// filter can be a number (take first only n) or an email (take only the target with this email 
+const filter = (targets, criteria) => {
+  if (!criteria) 
+    return targets;
+  if (parseInt(criteria,10) > 0) {
+    console.log("...but processing only ", criteria);
+     return targets.slice(0,criteria);
+  } else if (criteria >0) {
+    console.log("...but processing only ", argv.target);
+    const d = targets.find( d => d.email === argv.target);
+    return [d];
+  }
+  console.error("don't know how to filter ",criteria);
+  throw new Error ("don't know how to filter ",criteria);
+}
 
-module.exports = { getTargets };
+module.exports = { getTargets, filter };

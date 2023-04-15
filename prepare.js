@@ -1,7 +1,7 @@
 require("dotenv").config();
 const { subject, html, getTokens, insertVariables } = require("./template");
 const { supabase, getTargets: getDigested } = require("./api");
-const getTargets = require("./targets").getTargets;
+const {getTargets, filter} = require("./targets");
 const color = require("cli-color");
 const countries=require("i18n-iso-countries");
 
@@ -74,6 +74,7 @@ console.log(
 let targets = getTargets(sourceName);
 console.log("targetting ", targets.length, " from ", sourceName);
 
+
 const prepare = async (target, templateName, campaign) => {
   if (!target.locale && argv.lang) {
     console.warn("no language for ", target.email);
@@ -139,14 +140,8 @@ const main = async () => {
       process.exit(1);
     }
   }
-  if (parseInt(argv.target,10) > 0) {
-    console.log("...but processing only ", argv.target);
-    targets = targets.slice(0,argv.target);
-  } else if (argv.target.length >0) {
-    console.log("...but processing only ", argv.target);
-    const d = targets.find( d => d.email === argv.target);
-    targets = [d];
-  }
+  targets = filter (targets, argv.target);
+
   for (const i in targets) {
     const target = targets[i];
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
