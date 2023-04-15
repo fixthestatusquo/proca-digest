@@ -3,25 +3,24 @@ const nodemailer = require("nodemailer");
 
 let transporter = undefined;
 
-const export initPreview = () => {
-  const [user,password]=process.env.ETHEREAL_ACCOUNT.split(":");
-  
+const initPreview = () => {
+  const [user, password] = process.env.ETHEREAL_ACCOUNT.split(":");
+
   transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    secure: true, 
+    host: "smtp.ethereal.email",
+    secure: true,
     auth: {
       user: user,
       pass: password,
     },
   });
   return transporter;
-}
+};
 
-
-const export init =config => {
+const init = (config) => {
   transporter = nodemailer.createTransport({
     // todo: put service  and host in .env ...or config on proca?
-//    service: "gmail",
+    //    service: "gmail",
     host: config.transport.host,
     port: 587,
     secure: false, // true for 465, false for other ports
@@ -31,10 +30,9 @@ const export init =config => {
     },
   });
   return transporter;
-}
+};
 
-const export sendDigest = async (s, h, email) => {
-
+const sendDigest = async (s, h, email) => {
   let info = await transporter.sendMail({
     from: '"Bruce Wayne 🦇" <bruce.wayne@gmail.com>', // sender address TODO: take from campaign.config
     to: "xavierqq@fixthestatusquo.org", // list of receivers
@@ -49,4 +47,6 @@ const export sendDigest = async (s, h, email) => {
     console.log("Message sent: %s", info.messageId);
     console.log("Preview URL: %s", transporter.getTestMessageUrl(info));
   }
+};
 
+module.exports = { sendDigest, init, initPreview };
