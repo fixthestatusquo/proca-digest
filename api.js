@@ -7,6 +7,18 @@ const supaAdminKey = process.env.SUPABASE_SECRET_KEY;
 
 const supabase = createClient(supaUrl, supaAdminKey);
 
+const getDigests = async ( campaign, status = "pending") => {
+  const { data, error } = await supabase
+  .from('digest')
+  .select("*")
+  .eq('status',status) 
+  .eq('campaign',campaign)
+  if (error)
+    throw error;
+
+  return data;
+}
+
 const getTargets = async ( campaign, status = "pending") => {
   const { data, error } = await supabase
   .from('digest_targets')
@@ -19,4 +31,4 @@ const getTargets = async ( campaign, status = "pending") => {
   return data;
 }
 
-module.exports = { supabase, getTargets };
+module.exports = { supabase, getTargets, getDigests };
