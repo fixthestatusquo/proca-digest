@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { subject, html, getTokens, insertVariables } = require("./template");
-const { supabase, getTargets: getDigested } = require("./api");
+const { supabase, getTargets: getDigested, getTopPics } = require("./api");
 const {getTargets, filter} = require("./targets");
 const color = require("cli-color");
 const countries=require("i18n-iso-countries");
@@ -83,12 +83,12 @@ const prepare = async (target, templateName, campaign) => {
   let variables = {target:{ ...target.field,...target },
     country: {code: target.area, name: countries.getName(target.area, locale) || ""},
     total: "MISSING",
-    top: {
-    }
+    top: { picturess: await getTopPics(campaign, target.area), comments: "" },
   };
   delete variables.target.email;
   delete variables.target.externalId;
   delete variables.target.field;
+  console.log("variables", variables)
   const s = subject(campaign, templateName, locale);
   const template = html(campaign, templateName, locale);
   const tokens = getTokens (template);
