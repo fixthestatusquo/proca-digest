@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const color = require("cli-color");
 //should be for the preview
 
 let transporter = undefined;
@@ -16,7 +17,7 @@ const initPreview = async () => {
         console.error("Failed to create a testing account. " + err.message);
         reject("Failed to create a testing account. " + err.message);
       }
-      console.log(account.user, "test credentials obtained");
+//      console.log(account, "test credentials obtained");
 
       // Create a SMTP transporter object
       transporter = nodemailer.createTransport({
@@ -70,4 +71,17 @@ const sendDigest = async (email, subject, body) => {
 });
 };
 
-module.exports = { sendDigest, init, initPreview, previewUrl };
+
+const preview = async (email,subject,body) => {
+  if (!transporter) {
+    await initPreview ();
+  } 
+  if  (transporter.options.host !== 'smtp.ethereal.email') { //extra security
+    console.error(color.red("invalid preview host", transporter.options.host));
+    throw new Error("invalid transporter for preview");
+  }
+  const info= await sendDigest (email,subject, body);
+  return {url:previewUrl(info), ...info};
+}
+
+module.exports = { sendDigest, init, preview, initPreview, previewUrl };

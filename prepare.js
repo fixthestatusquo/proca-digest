@@ -4,6 +4,7 @@ const { supabase, getDigests, getTopPics, getTopComments } = require("./api");
 const {getTargets, filter} = require("./targets");
 const color = require("cli-color");
 const countries=require("i18n-iso-countries");
+const {preview } = require("./mailer");
 
 const argv = require("minimist")(process.argv.slice(2), {
   boolean: ["help", "dry-run", "verbose"],
@@ -20,6 +21,7 @@ const help = () => {
       "--force process even if there are already pending digests waiting to be sent",
       "--dry-run",
       "--verbose",
+      "--preview (genereate a link to etheral.mail with a preview of the message)",
       "--target= email@example.org or number of targets to process",
       "{campaign_name}",
     ].join("\n")
@@ -109,14 +111,8 @@ console.log("ivana, we need variables for each of these",tokens);
   const body = insertVariables(template, variables);
 //console.log(body);
   if (argv.verbose) console.log(target.email, locale, templateName, s);
-  if (argv["dry-run"]) return;
 
-
-  // DON'T SAVE TO SUPABASE IF THERE IS NO TOP 3??
-  if (variables.top.pictures === "" || variables.top.comments === "") return;
-
-  const { data, error } = await supabase.from("digest").insert([
-    {
+  const info = {
       created_at: createdAt,
       subject: s,
       body: body,
@@ -126,13 +122,21 @@ console.log("ivana, we need variables for each of these",tokens);
       email: target.email,
       target_id: target.externalId || target.email,
       variables: variables,
-    }, // , template: `${campaign}/${name}` },
-  ]);
+  };
+  // DON'T SAVE TO SUPABASE IF THERE IS NO TOP 3??
+  if (variables.top.pictures === "" || variables.top.comments === "") {
+    console.warn(color.red("NEVER silently drop something, especially if you aren't sure you need to"));
+    return info;
+  }
+  if (argv["dry-run"]) return info;
+
+  const { error } = await supabase.from("digest").insert([info]);
 
   if (error) {
     console.error(color.red("error saving template"), error);
     throw error;
   }
+  return info;
 };
 
 const main = async () => {
@@ -154,7 +158,12 @@ const main = async () => {
     const target = targets[i];
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
-    await prepare(targets[i], templateName, campaign);
+    const r = await prepare(target, templateName, campaign);
+    if(argv.preview) {
+      const info= await preview (target.email,target.subject,target.body);
+      console.log(color.green(info.url));
+    }
+
   }
 };
 
