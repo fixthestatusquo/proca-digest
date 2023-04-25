@@ -37,8 +37,8 @@ const main = async () => {
     const target = targets[i];
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
-    const info= await preview (target.email,target.subject,target.body);
-  console.log(target.email,target.variables.target.name,target.variables.target.locale,target.variables.country.code);
+    const r = await prepare(target, templateName, campaign);
+      const info= await preview (target.email,target.subject,target.body);
 
     console.log(color.green(info.url));
   }

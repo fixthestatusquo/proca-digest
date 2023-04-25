@@ -6,6 +6,9 @@ const source =
   process.env.REACT_APP_TARGETS_FOLDER ||
   process.env.REACT_APP_CONFIG_FOLDER + "target/source/";
 
+const server =
+  process.env.REACT_APP_CONFIG_FOLDER + "target/server/";
+
 // import from proca instead of duplicating
 const languages = {
   be: ["fr", "nl"],
@@ -39,10 +42,28 @@ const languages = {
   no: "nb_NO",
 };
 
+const getServerTargets = (fileName) => {
+  const p = path.resolve(__dirname, server + `${fileName}.json`);
+  const targets = JSON.parse(fs.readFileSync(p, "utf8")) || [];
+  return targets;
+}
+
 const getTargets = (fileName) => {
   const p = path.resolve(__dirname, source + `${fileName}.json`);
   const targets = JSON.parse(fs.readFileSync(p, "utf8")).filter((d) => d.email);
+  const sources = getServerTargets (fileName);
+
+  const getSalutation = externalId => {
+    const source = sources.find(d => d.externalId === externalId);
+    if (!source) return "";
+    return source.fields.salutation; 
+  };
+
   targets.forEach((d) => {
+    if (!d.salutation) {
+      const salutation = getSalutation (d.externalId);
+       if (salutation) d.salutation = salutation;
+    }
     if (!d.locale) {
       d.locale =
         typeof languages[d.area.toLowerCase()] === "string" ? languages[d.area.toLowerCase()] : null;
@@ -57,9 +78,9 @@ const filter = (targets, criteria) => {
   if (parseInt(criteria,10) > 0) {
     console.log("...but processing only ", criteria);
      return targets.slice(0,criteria);
-  } else if (criteria >0) {
-    console.log("...but processing only ", argv.target);
-    const d = targets.find( d => d.email === argv.target);
+  } else {
+    console.log("...but processing only ", criteria);
+    const d = targets.find( d => d.email === criteria);
     return [d];
   }
   console.error("don't know how to filter ",criteria);

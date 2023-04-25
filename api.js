@@ -53,7 +53,7 @@ const getTopPics = async (campaign, area) => {
 
   if (error) console.log("error getting top pics", error)
 
-  if (data.length < 3) {
+  if (data.length === 0) {
     console.log("no top pics for ", campaign, area);
     return "";
   }
@@ -79,7 +79,7 @@ const getTopComments = async (campaign, area) => {
 
   if (error) console.log("error getting top comments", error)
 
-  if (data.length < 3) {
+  if (data.length === 3) {
     console.log("no top pics for ", campaign, area);
     return "";
   }
