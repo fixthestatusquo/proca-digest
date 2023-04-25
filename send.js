@@ -52,7 +52,7 @@ const sendDigest = async (digest) => {
     console.log("Preview URL: %s", transporter.getTestMessageUrl(info));
   }
   // Preview only available when sending through an Ethereal account!!
-  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 
   if (argv["dry-run"]) {
     return;
@@ -64,8 +64,7 @@ const sendDigest = async (digest) => {
     .update({ 'status': 'sent' })
     .match({ id: id })
 
-  if (error) console.log("error updating digest", id, error)
-
+  if (error) console.log("error updating digest", id, error);
 }
 
 const main = async () => {
@@ -79,5 +78,5 @@ console.log("found ", digests.length, " digests to send")
   process.exit(1);
   }
 
-
 main().catch(console.error);
+

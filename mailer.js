@@ -71,9 +71,7 @@ const sendDigest = async (email, subject, body) => {
 });
 };
 
-
 const preview = async (email, subject, body) => {
-
   if (!transporter) {
     await initPreview ();
   }
@@ -86,3 +84,4 @@ const preview = async (email, subject, body) => {
 }
 
 module.exports = { sendDigest, init, preview, initPreview, previewUrl };
+

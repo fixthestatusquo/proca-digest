@@ -1,9 +1,7 @@
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 const supaUrl = process.env.REACT_APP_SUPABASE_URL;
-const supaAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 const supaAdminKey = process.env.SUPABASE_SECRET_KEY;
-
 
 const supabase = createClient(supaUrl, supaAdminKey);
 
@@ -63,9 +61,6 @@ const getTopPics = async (campaign, area) => {
   let topPics = "";
 
   data.map((pic) => {const style = `height:${pic.height}px;width:${pic.width}px`;
-    console.log("pic", style)
-    console.log("pic", makeUrl(campaign, pic.hash))
-
     topPics += `<p>${pic.legend}</p><img src="${makeUrl(campaign, pic.hash)}" style=${style} alt="${pic.id}" />`
   });
 
@@ -98,5 +93,5 @@ const getTopComments = async (campaign, area) => {
   return topComments;
 }
 
-
 module.exports = { supabase, getDigests, getTopPics, getTopComments, getTargets };
+
