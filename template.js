@@ -3,6 +3,7 @@ const path = require("path");
 const i18next = require("i18next");
 require("dotenv").config();
 const color = require("cli-color");
+const snark = require("snarkdown");
 
 const from = process.env.REACT_APP_TEMPLATES_FOLDER || process.env.REACT_APP_CONFIG_FOLDER + 'email/digest/';
 
@@ -68,7 +69,7 @@ const getLetter = (campaign, locale = "en") => {
   if (!fs.existsSync(p)) {
     console.warn(color.red("no campaign config file for", campaign));
   }
- return JSON.parse(fs.readFileSync(p, "utf8")).config.locales[locale].letter
+  return snark(JSON.parse(fs.readFileSync(p, "utf8")).config.locales[locale].letter);
 }
 
 module.exports = { subject, html, insertVariables, getTokens, getLetter };

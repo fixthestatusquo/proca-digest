@@ -7,7 +7,8 @@
     "i18next": "^22.4.14",
     "i18next-http-backend": "^2.1.1",
     "minimist": "^1.2.8",
-    "nodemailer": "^6.9.1"
+    "nodemailer": "^6.9.1",
+    "snarkdown": "^2.0.0"
   },
   "scripts": {
     "prepare": "node prepare.js",
