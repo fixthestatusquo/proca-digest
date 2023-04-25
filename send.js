@@ -52,7 +52,7 @@ const sendDigest = async (digest) => {
     console.log("Preview URL: %s", transporter.getTestMessageUrl(info));
   }
   // Preview only available when sending through an Ethereal account!!
-  //console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 
   if (argv["dry-run"]) {
     return;

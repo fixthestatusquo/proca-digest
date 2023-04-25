@@ -19,6 +19,17 @@ const getDigests = async ( campaign, status = "pending") => {
   return data;
 }
 
+const makeUrl = (campaign, hash) => {
+  return (
+    process.env.REACT_APP_SUPABASE_URL +
+    "/storage/v1/object/public/picture/" +
+    campaign +
+    "/" +
+    hash +
+    ".jpg"
+  );
+};
+
 const getTargets = async ( campaign, status = "pending") => {
   const { data, error } = await supabase
   .from('digest_targets')
@@ -51,10 +62,13 @@ const getTopPics = async (campaign, area) => {
 
   let topPics = "";
 
-  data.map((pic) => {
-    console.log("pic", pic)
-    topPics += `<p>${pic.legend}</p><img src="${pic.hash}" alt="${pic.id}" />`
+  data.map((pic) => {const style = `height:${pic.height}px;width:${pic.width}px`;
+    console.log("pic", style)
+    console.log("pic", makeUrl(campaign, pic.hash))
+
+    topPics += `<p>${pic.legend}</p><img src="${makeUrl(campaign, pic.hash)}" style=${style} alt="${pic.id}" />`
   });
+
   return topPics;
 }
 const getTopComments = async (campaign, area) => {

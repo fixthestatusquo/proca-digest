@@ -72,10 +72,11 @@ const sendDigest = async (email, subject, body) => {
 };
 
 
-const preview = async (email,subject,body) => {
+const preview = async (email, subject, body) => {
+
   if (!transporter) {
     await initPreview ();
-  } 
+  }
   if  (transporter.options.host !== 'smtp.ethereal.email') { //extra security
     console.error(color.red("invalid preview host", transporter.options.host));
     throw new Error("invalid transporter for preview");
