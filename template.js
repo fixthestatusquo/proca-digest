@@ -3,7 +3,19 @@ const path = require("path");
 const i18next = require("i18next");
 require("dotenv").config();
 const color = require("cli-color");
-const snark = require("snarkdown");
+const _snarkdown = require("snarkdown");
+
+const snarkdown = (md) => {
+  const htmls = md
+    .split(/(?:\r?\n){2,}/)
+    .map((l) =>
+      [" ", "\t", "#", "-", "*"].some((ch) => l.startsWith(ch))
+        ? _snarkdown(l)
+        : `<p>${_snarkdown(l)}</p>`
+    );
+
+  return htmls.join("\n\n");
+};
 
 const from = process.env.REACT_APP_TEMPLATES_FOLDER || process.env.REACT_APP_CONFIG_FOLDER + 'email/digest/';
 
@@ -41,7 +53,7 @@ const subject = (campaign, name, lang) => {
 const insertVariables = (template, variables) => {
 //console.log(variables);
   // insert variables in templates code here
-    return i18next.t(template,variables);
+    return i18next.t(template,{...variables,interpolation: {escapeValue:false}});
 };
 
 const html = (campaign, name, lang) => {
@@ -69,7 +81,7 @@ const getLetter = (campaign, locale = "en") => {
   if (!fs.existsSync(p)) {
     console.warn(color.red("no campaign config file for", campaign));
   }
-  return snark(JSON.parse(fs.readFileSync(p, "utf8")).config.locales[locale].letter);
+  return snarkdown(JSON.parse(fs.readFileSync(p, "utf8")).config.locales[locale].letter);
 }
 
 module.exports = { subject, html, insertVariables, getTokens, getLetter };
