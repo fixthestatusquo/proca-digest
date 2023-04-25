@@ -6,6 +6,8 @@ const color = require("cli-color");
 
 const from = process.env.REACT_APP_TEMPLATES_FOLDER || process.env.REACT_APP_CONFIG_FOLDER + 'email/digest/';
 
+const configFolder = process.env.REACT_APP_CONFIG_FOLDER
+
 i18next.init({
   lng: 'en', // if you're using a language detector, do not define the lng option
   debug: false,
@@ -25,7 +27,9 @@ const resolve = (campaign,name,lang,ext) => {
 }
 
 const subject = (campaign, name, lang) => {
-  let p = resolve(campaign, name, lang,'json');
+
+  let p = resolve(campaign, name, lang, 'json');
+  console.log("subject",p)
   if (!fs.existsSync(p)) {
     console.error("Subject does not exist:", p);
     return;
@@ -36,7 +40,7 @@ const subject = (campaign, name, lang) => {
 const insertVariables = (template, variables) => {
 //console.log(variables);
   // insert variables in templates code here
-  return i18next.t(template,variables);
+    return i18next.t(template,variables);
 };
 
 const html = (campaign, name, lang) => {
@@ -59,4 +63,12 @@ const getTokens = html => {
   return tokens;
 }
 
-module.exports = { subject, html, insertVariables, getTokens };
+const getLetter = (campaign, locale = "en") => {
+  const p = path.resolve(__dirname, configFolder + `/campaign/${campaign}.json`);
+  if (!fs.existsSync(p)) {
+    console.warn(color.red("no campaign config file for", campaign));
+  }
+ return JSON.parse(fs.readFileSync(p, "utf8")).config.locales[locale].letter
+}
+
+module.exports = { subject, html, insertVariables, getTokens, getLetter };

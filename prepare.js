@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { subject, html, getTokens, insertVariables } = require("./template");
+const { subject, html, getTokens, insertVariables, getLetter } = require("./template");
 const { supabase, getDigests, getTopPics, getTopComments } = require("./api");
 const {getTargets, filter} = require("./targets");
 const color = require("cli-color");
@@ -85,13 +85,14 @@ const prepare = async (target, templateName, campaign) => {
   let variables = {target:{ ...target.field,...target },
     country: {code: target.area, name: countries.getName(target.area, locale) || ""},
     total: "MISSING",
+    campaign: {letter: getLetter(campaign)},
     top: { pictures: await getTopPics(campaign, target.area), comments: await getTopComments(campaign, target.area) },
   };
   delete variables.target.email;
   delete variables.target.externalId;
   delete variables.target.field;
 
-  console.log("variables", variables)
+  //console.log("variables", variables)
 
   const s = subject(campaign, templateName, locale);
   const template = html(campaign, templateName, locale);
@@ -109,7 +110,7 @@ console.log("ivana, we need variables for each of these",tokens);
   // fetch variables
   // insert variables in template
   const body = insertVariables(template, variables);
-//console.log(body);
+
   if (argv.verbose) console.log(target.email, locale, templateName, s);
 
   const info = {
@@ -159,8 +160,10 @@ const main = async () => {
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
     const r = await prepare(target, templateName, campaign);
-    if(argv.preview) {
-      const info= await preview (target.email,target.subject,target.body);
+
+    if (argv.preview) {
+      const b = insertVariables(r.body, r.variables);
+      const info= await preview (r.email,r.subject,b);
       console.log(color.green(info.url));
     }
 
