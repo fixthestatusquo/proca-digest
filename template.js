@@ -42,6 +42,7 @@ const resolve = (campaign,name,lang,ext) => {
 const subject = (campaign, name, lang) => {
 
   let p = resolve(campaign, name, lang, 'json');
+console.log(p,lang);
   console.log("subject",p)
   if (!fs.existsSync(p)) {
     console.error("Subject does not exist:", p);
@@ -58,6 +59,7 @@ const insertVariables = (template, variables) => {
 
 const html = (campaign, name, lang) => {
   let p = resolve(campaign, name, lang,'html');
+console.log(p,lang);
   if (!fs.existsSync(p)) {
     console.error("HTML does not exist:", p);
     return;

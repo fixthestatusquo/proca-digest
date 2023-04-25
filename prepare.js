@@ -78,14 +78,14 @@ console.log("targetting ", targets.length, " from ", sourceName);
 
 
 const prepare = async (target, templateName, campaign) => {
-  if (!target.locale && argv.lang) {
+  if (!target.locale && target.field.lang && argv.lang) {
     console.warn("no language for ", target.email);
   }
-  const locale = target.locale || argv.locale;
+  const locale = argv.locale || target.locale || target.field.lang;
   let variables = {target:{ ...target.field,...target },
     country: {code: target.area, name: countries.getName(target.area, locale) || ""},
     total: "MISSING",
-    campaign: {letter: getLetter(campaign)},
+    campaign: {letter: getLetter(campaign,locale)},
     top: { pictures: await getTopPics(campaign, target.area), comments: await getTopComments(campaign, target.area) },
   };
   delete variables.target.email;
@@ -162,6 +162,7 @@ const main = async () => {
     const r = await prepare(target, templateName, campaign);
 
     if (argv.preview) {
+      console.log(target);
       const b = insertVariables(r.body, r.variables);
       const info= await preview (r.email,r.subject,b);
       console.log(color.green(info.url));

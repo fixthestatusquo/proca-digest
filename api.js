@@ -41,7 +41,7 @@ const getTargets = async ( campaign, status = "pending") => {
 }
 
 const getTopPics = async (campaign, area) => {
-  console.log("getting top pics for ", campaign, area)
+  //console.log("getting top pics for ", campaign, area)
 
   const { data, error } = await supabase
     .from('pictures')
@@ -51,10 +51,10 @@ const getTopPics = async (campaign, area) => {
     .is("star", true)
     .limit(3)
 
-  if (error) console.log("error getting top pics", error)
+  if (error) console.error("error getting top pics", error)
 
   if (data.length === 0) {
-    console.log("no top pics for ", campaign, area);
+    console.error("no top pics for ", campaign, area);
     return "";
   }
 
@@ -67,7 +67,8 @@ const getTopPics = async (campaign, area) => {
   return topPics;
 }
 const getTopComments = async (campaign, area) => {
-  console.log("getting top comments for ", campaign, area)
+
+  //console.log("getting top comments for ", campaign, area)
 
   const { data, error } = await supabase
     .from('comments')
@@ -87,8 +88,7 @@ const getTopComments = async (campaign, area) => {
   let topComments = "";
 
   data.map((comment) => {
-    console.log("comment", comment)
-    topComments += `<p><b>${comment.name.split(",")[0]}: </b>${comment.comment}</p>`
+    topComments += `<p><b>${comment.name}: </b>${comment.comment}</p>`
   });
   return topComments;
 }
