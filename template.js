@@ -17,33 +17,37 @@ const snarkdown = (md) => {
   return htmls.join("\n\n");
 };
 
-const from = process.env.REACT_APP_TEMPLATES_FOLDER || process.env.REACT_APP_CONFIG_FOLDER + 'email/digest/';
+const from =
+  process.env.REACT_APP_TEMPLATES_FOLDER ||
+  process.env.REACT_APP_CONFIG_FOLDER + "email/digest/";
 
-const configFolder = process.env.REACT_APP_CONFIG_FOLDER
+const configFolder = process.env.REACT_APP_CONFIG_FOLDER;
 
 i18next.init({
-  lng: 'en', // if you're using a language detector, do not define the lng option
+  lng: "en", // if you're using a language detector, do not define the lng option
   debug: false,
   resources: {
-    en: {
-    }
-  }
+    en: {},
+  },
 });
 
-const resolve = (campaign,name,lang,ext) => {
-  const p = path.resolve(__dirname, from + `${campaign}/${name}/${lang}.${ext}`);
+const resolve = (campaign, name, lang, ext) => {
+  const p = path.resolve(
+    __dirname,
+    from + `${campaign}/${name}/${lang}.${ext}`
+  );
   if (!fs.existsSync(p)) {
-    console.warn (color.red("no template for ",campaign,name,lang), ", trying in en");
+    console.warn(
+      color.red("no template for ", campaign, name, lang),
+      ", trying in en"
+    );
     return path.resolve(__dirname, from + `${campaign}/${name}/en.${ext}`);
   }
   return p;
-}
+};
 
 const subject = (campaign, name, lang) => {
-
-  let p = resolve(campaign, name, lang, 'json');
-console.log(p,lang);
-  console.log("subject",p)
+  let p = resolve(campaign, name, lang, "json");
   if (!fs.existsSync(p)) {
     console.error("Subject does not exist:", p);
     return;
@@ -52,14 +56,16 @@ console.log(p,lang);
 };
 
 const insertVariables = (template, variables) => {
-//console.log(variables);
+  //console.log(variables);
   // insert variables in templates code here
-    return i18next.t(template,{...variables,interpolation: {escapeValue:false}});
+  return i18next.t(template, {
+    ...variables,
+    interpolation: { escapeValue: false },
+  });
 };
 
 const html = (campaign, name, lang) => {
-  let p = resolve(campaign, name, lang,'html');
-console.log(p,lang);
+  let p = resolve(campaign, name, lang, "html");
   if (!fs.existsSync(p)) {
     console.error("HTML does not exist:", p);
     return;
@@ -67,23 +73,33 @@ console.log(p,lang);
   return fs.readFileSync(p, "utf8");
 };
 
-
-const getTokens = html => {
+const getTokens = (html) => {
   const tokens = [];
 
-  html.replace(/\{\{(.*?)}}/g, function(a, b) {
-  tokens.push(b);
-});
+  html.replace(/\{\{(.*?)}}/g, function (a, b) {
+    tokens.push(b);
+  });
 
   return tokens;
-}
+};
 
 const getLetter = (campaign, locale = "en") => {
-  const p = path.resolve(__dirname, configFolder + `/campaign/${campaign}.json`);
+  const p = path.resolve(
+    __dirname,
+    configFolder + `/campaign/${campaign}.json`
+  );
   if (!fs.existsSync(p)) {
     console.warn(color.red("no campaign config file for", campaign));
   }
-  return snarkdown(JSON.parse(fs.readFileSync(p, "utf8")).config.locales[locale].letter);
-}
+  const locales = JSON.parse(fs.readFileSync(p, "utf8")).config?.locales;
+  if (!locales[locale] || !locales[locale].letter) {
+    console.warn(color.red("no letter for ", locale), "defaulting to en");
+    locale = "en";
+  }
+
+  return snarkdown(
+    locales[locale].letter
+  );
+};
 
 module.exports = { subject, html, insertVariables, getTokens, getLetter };

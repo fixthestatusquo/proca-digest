@@ -80,8 +80,8 @@ const getTopComments = async (campaign, area) => {
 
   if (error) console.log("error getting top comments", error)
 
-  if (data.length === 3) {
-    console.log("no top pics for ", campaign, area);
+  if (data.length === 0) {
+    console.log("no top comments for ", campaign, area);
     return "";
   }
 

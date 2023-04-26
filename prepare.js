@@ -1,15 +1,30 @@
+const fs = require("fs");
 require("dotenv").config();
-const { subject, html, getTokens, insertVariables, getLetter } = require("./template");
+const {
+  subject,
+  html,
+  getTokens,
+  insertVariables,
+  getLetter,
+} = require("./template");
 const { supabase, getDigests, getTopPics, getTopComments } = require("./api");
-const {getTargets, filter} = require("./targets");
+const { getTargets, filter } = require("./targets");
 const color = require("cli-color");
-const countries=require("i18n-iso-countries");
-const {preview } = require("./mailer");
+const countries = require("i18n-iso-countries");
+const { preview } = require("./mailer");
+const { getStats } = require("./server");
+let csv = "name,email,saluation,gender,language,area,external_id";
 
 const argv = require("minimist")(process.argv.slice(2), {
-  boolean: ["help", "dry-run", "verbose"],
-  default: { template: "default" },
+  boolean: ["help", "dry-run", "verbose", "csv"],
+  default: { template: "default", csv: true },
 });
+
+const writeCsv = () => {
+  const filename = "/tmp/" + dateFormat(createdAt) + ".csv";
+  fs.writeFileSync(filename, csv);
+  console.log(color.green("saved", filename));
+};
 
 const help = () => {
   console.log(
@@ -17,10 +32,11 @@ const help = () => {
       "--help (this command)",
       "--template (template folder in config/email/digest/campaigName), by default default.xx.html",
       "--source (source file in config/targets/source/)",
-      "[todo] --lang (default language if not specified in source)",
+      "--lang (default language if not specified in source)",
       "--force process even if there are already pending digests waiting to be sent",
       "--dry-run",
       "--verbose",
+      "--csv|no-csv generate a csv with the targets + some variables",
       "--preview (genereate a link to etheral.mail with a preview of the message)",
       "--target= email@example.org or number of targets to process",
       "{campaign_name}",
@@ -34,7 +50,7 @@ const createdAt = new Date();
 const dateFormat = (date) => {
   const utc = "getUTC"; // 'get'?
   return (
-    "%Y-%m-%d %H:%M:%S".replace(/%[YmdHMS]/g, function (m) {
+    "%Y%m%d_%H%M%S".replace(/%[YmdHMS]/g, function (m) {
       switch (m) {
         case "%Y":
           return date[utc + "FullYear"](); // no leading zeros required
@@ -58,7 +74,7 @@ const dateFormat = (date) => {
       }
       // add leading zero if required
       return ("0" + m).slice(-2);
-    }) + "+00"
+    })
   );
 };
 
@@ -76,17 +92,24 @@ console.log(
 let targets = getTargets(sourceName);
 console.log("targetting ", targets.length, " from ", sourceName);
 
-
-const prepare = async (target, templateName, campaign) => {
+const prepare = async (target, templateName, campaign, data) => {
   if (!target.locale && target.field.lang && argv.lang) {
     console.warn("no language for ", target.email);
   }
   const locale = argv.locale || target.locale || target.field.lang;
-  let variables = {target:{ ...target.field,...target },
-    country: {code: target.area, name: countries.getName(target.area, locale) || ""},
-    total: "MISSING",
-    campaign: {letter: getLetter(campaign,locale)},
-    top: { pictures: await getTopPics(campaign, target.area), comments: await getTopComments(campaign, target.area) },
+  let variables = {
+    target: { ...target.field, ...target },
+    country: {
+      code: target.area,
+      name: countries.getName(target.area, locale) || "",
+      total: data.country[target.area],
+    },
+    total: data.total,
+    campaign: { letter: getLetter(campaign, locale) },
+    top: {
+      pictures: await getTopPics(campaign, target.area),
+      comments: await getTopComments(campaign, target.area),
+    },
   };
   delete variables.target.email;
   delete variables.target.externalId;
@@ -96,9 +119,8 @@ const prepare = async (target, templateName, campaign) => {
 
   const s = subject(campaign, templateName, locale);
   const template = html(campaign, templateName, locale);
-  const tokens = getTokens (template);
-if (argv.verbose)
-console.log("ivana, we need variables for each of these",tokens);
+  const tokens = getTokens(template);
+  if (argv.verbose) console.log("We need variables for each of these", tokens);
   if (!s) {
     console.error("Subject not found:", target);
     throw new Error("Subject not found:", target);
@@ -114,19 +136,23 @@ console.log("ivana, we need variables for each of these",tokens);
   if (argv.verbose) console.log(target.email, locale, templateName, s);
 
   const info = {
-      created_at: createdAt,
-      subject: s,
-      body: body,
-      status: "pending",
-      template: templateName,
-      campaign: campaign,
-      email: target.email,
-      target_id: target.externalId || target.email,
-      variables: variables,
+    created_at: createdAt,
+    subject: s,
+    body: body,
+    status: "pending",
+    template: templateName,
+    campaign: campaign,
+    email: target.email,
+    target_id: target.externalId || target.email,
+    variables: variables,
   };
   // DON'T SAVE TO SUPABASE IF THERE IS NO TOP 3??
   if (variables.top.pictures === "" || variables.top.comments === "") {
-    console.warn(color.red("NEVER silently drop something, especially if you aren't sure you need to"));
+    console.warn(
+      color.red(
+        "->skipping ",target.name
+      ),target.area,data.country[target.area],"supporters"
+    );
     return info;
   }
   if (argv["dry-run"]) return info;
@@ -142,6 +168,7 @@ console.log("ivana, we need variables for each of these",tokens);
 
 const main = async () => {
   const pending = await getDigests(campaign, "pending");
+  const stats = await getStats(campaign);
   if (pending.length > 0) {
     console.log("targetted already ", pending.length, " from ", sourceName);
     if (!argv.force && !argv["dry-run"]) {
@@ -153,22 +180,26 @@ const main = async () => {
       process.exit(1);
     }
   }
-  targets = filter (targets, argv.target);
+  targets = filter(targets, argv.target);
 
+  if (argv.preview) {
+    csv + ",preview";
+  }
   for (const i in targets) {
     const target = targets[i];
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
-    const r = await prepare(target, templateName, campaign);
+    const r = await prepare(target, templateName, campaign, stats);
 
+    csv += `\n${target.name},${target.email},${target.salutation},${target.field.gender},${target.locale},${target.area},${target.externalId}`;
     if (argv.preview) {
-      console.log(target);
       const b = insertVariables(r.body, r.variables);
-      const info= await preview (r.email,r.subject,b);
+      const info = await preview(r.email, r.subject, b);
       console.log(color.green(info.url));
+      csv +=','+info.url;
     }
-
   }
+  writeCsv();
 };
 
 main().catch(console.error);
