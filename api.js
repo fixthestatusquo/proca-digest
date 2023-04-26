@@ -40,6 +40,9 @@ const getTargets = async ( campaign, status = "pending") => {
   return data;
 }
 
+// TO DO: For the next digests, check if pics/comments are already sent
+// mark stars and comment if included in digests??
+
 const getTopPics = async (campaign, area) => {
   //console.log("getting top pics for ", campaign, area)
 
