@@ -92,13 +92,16 @@ const getLetter = (campaign, locale = "en") => {
     console.warn(color.red("no campaign config file for", campaign));
   }
   const locales = JSON.parse(fs.readFileSync(p, "utf8")).config?.locales;
-  if (!locales[locale] || !locales[locale].letter) {
+
+  const texts = locales[locale] || null;
+
+  if (!texts || !texts["server:"] || !!texts["server:"].letter) {
     console.warn(color.red("no letter for ", locale), "defaulting to en");
     locale = "en";
   }
 
   return snarkdown(
-    locales[locale].letter
+    texts["server:"].letter
   );
 };
 
