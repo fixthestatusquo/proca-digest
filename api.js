@@ -64,7 +64,7 @@ const getTopPics = async (campaign, area) => {
   let topPics = "";
 
   data.map((pic) => {const style = `height:${pic.height}px;width:${pic.width}px`;
-    topPics += `<p>${pic.legend}</p><img src="${makeUrl(campaign, pic.hash)}" style=${style} alt="${pic.id}" />`
+    topPics += `<p><b>${pic.legend}: </b></p><img src="${makeUrl(campaign, pic.hash)}" style=${style} alt="${pic.id}" />`
   });
 
   return topPics;
@@ -91,9 +91,10 @@ const getTopComments = async (campaign, area) => {
   let topComments = "";
 
   data.map((comment) => {
-    topComments += `<p><b>${comment.name}: </b>${comment.comment}</p>`
+    topComments += `<p><b>${comment.name.split(",")[0]}: </b>${comment.comment}</p>`
   });
-  return topComments;
+
+  return `<div style="background-color: #d3d3d3; padding: 1%">${topComments}</div>`;
 }
 
 module.exports = { supabase, getDigests, getTopPics, getTopComments, getTargets };
