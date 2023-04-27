@@ -100,9 +100,8 @@ const getLetter = (campaign, locale = "en") => {
     locale = "en";
   }
 
-  return snarkdown(
-    texts["server:"].letter
-  );
+  return `<div style="border: solid #d3d3d3 10px; padding: 2%">${snarkdown(
+    texts["server:"].letter)}</div>`;
 };
 
 module.exports = { subject, html, insertVariables, getTokens, getLetter };
