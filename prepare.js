@@ -6,6 +6,7 @@ const {
   getTokens,
   insertVariables,
   getLetter,
+  getBackup,
 } = require("./template");
 const { supabase, getDigests, getTopPics, getTopComments } = require("./api");
 const { getTargets, filter } = require("./targets");
@@ -39,6 +40,7 @@ const help = () => {
       "--csv|no-csv generate a csv with the targets + some variables",
       "--preview (genereate a link to etheral.mail with a preview of the message)",
       "--target= email@example.org or number of targets to process",
+      "--backup template to use if no tops or something else is missing",
       "{campaign_name}",
     ].join("\n")
   );
@@ -84,6 +86,7 @@ if (argv.help || !campaign) return help();
 if (!argv.source) argv.source = campaign;
 let templateName = argv["template"]; // TODO: for each target, check if the target has received an email, "initial", otherwise, "default"
 const sourceName = argv["source"];
+const backup = argv["backup"];
 
 console.log(
   color.green("timestamp of the digest", dateFormat(createdAt)),
@@ -117,8 +120,21 @@ const prepare = async (target, templateName, campaign, data) => {
 
   //console.log("variables", variables)
 
-  const s = subject(campaign, templateName, locale);
-  const template = html(campaign, templateName, locale);
+  //if no top 3 or count > something
+
+  let s;
+  let template;
+
+  if ((variables.top.comments === "" || variables.top.pictures === "") && backup) {
+    s = getBackup(`${campaign}/${templateName}/${backup}.json`);
+    template = getBackup(`${campaign}/${templateName}/${backup}.html`);
+    variables.top.comments = await getTopComments(campaign);
+    variables.top.pictures = await getTopPics(campaign);
+  } else {
+    s = subject(campaign, templateName, locale);
+    template = html(campaign, templateName, locale);
+  }
+
   const tokens = getTokens(template);
   if (argv.verbose) console.log("We need variables for each of these", tokens);
   if (!s) {

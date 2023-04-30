@@ -6,15 +6,17 @@ const color = require("cli-color");
 const _snarkdown = require("snarkdown");
 
 const snarkdown = (md) => {
-  const htmls = md
-    .split(/(?:\r?\n){2,}/)
-    .map((l) =>
-      [" ", "\t", "#", "-", "*"].some((ch) => l.startsWith(ch))
-        ? _snarkdown(l)
-        : `<p>${_snarkdown(l)}</p>`
-    );
+  if (md) {
+    const htmls = md
+      .split(/(?:\r?\n){2,}/)
+      .map((l) =>
+        [" ", "\t", "#", "-", "*"].some((ch) => l.startsWith(ch))
+          ? _snarkdown(l)
+          : `<p>${_snarkdown(l)}</p>`
+      );
 
-  return htmls.join("\n\n");
+    return htmls.join("\n\n");
+  }
 };
 
 const from =
@@ -95,7 +97,7 @@ const getLetter = (campaign, locale = "en") => {
 
   const texts = locales[locale] || null;
 
-  if (!texts || !texts["server:"] || !!texts["server:"].letter) {
+  if (!texts || !texts["server:"] || !texts["server:"].letter) {
     console.warn(color.red("no letter for ", locale), "defaulting to en");
     locale = "en";
   }
@@ -104,4 +106,15 @@ const getLetter = (campaign, locale = "en") => {
     texts["server:"].letter)}</div>`;
 };
 
-module.exports = { subject, html, insertVariables, getTokens, getLetter };
+const getBackup = (backupFile) => {
+  const p = path.resolve(
+    __dirname,
+    from + `${backupFile}`
+  );
+  if (!fs.existsSync(p)) {
+    console.warn(color.red("no backup for ", backupFile));
+  }
+  return fs.readFileSync(p, "utf8");
+}
+
+module.exports = { subject, html, insertVariables, getTokens, getLetter, getBackup };
