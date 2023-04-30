@@ -118,10 +118,6 @@ const prepare = async (target, templateName, campaign, data) => {
   delete variables.target.externalId;
   delete variables.target.field;
 
-  //console.log("variables", variables)
-
-  //if no top 3 or count > something
-
   let s;
   let template;
 
