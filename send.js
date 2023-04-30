@@ -6,6 +6,9 @@ const argv = require("minimist")(process.argv.slice(2), {
   default: {"template":"default"}
 });
 
+
+// TO DO: MARK PICTURES AND COMMENTS SENT IN DIGEST (AND UNSTAR), SO WE DONT DOUBLE THEM NEXT TIME. MANOTHER COLUMN??
+
 const help = () => {
   console.log(
     [
