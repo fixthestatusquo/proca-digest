@@ -43,20 +43,29 @@ const getTargets = async ( campaign, status = "pending") => {
 // TO DO: For the next digests, check if pics/comments are already sent
 // mark stars and comment if included in digests??
 
-const getTopPics = async (campaign, area) => {
+const getTopPics = async (campaign, area = null) => {
   //console.log("getting top pics for ", campaign, area)
-
-  const { data, error } = await supabase
-    .from('pictures')
-    .select("*")
+const q = area ?
+ supabase
+  .from('pictures')
+  .select("*")
+  .eq("campaign", campaign)
+  .ilike("area", area)
+  .is("star", true)
+   .limit(3)
+: supabase
+  .from('pictures')
+  .select("*")
     .eq("campaign", campaign)
-    .ilike("area", area)
-    .is("star", true)
+    .not('legend', 'like', '')
+  .is("star", true)
     .limit(3)
+
+  const { data, error } = await q;
 
   if (error) console.error("error getting top pics", error)
 
-  if (data.length === 0) {
+  if (data.length < 3) {
     console.error("no top pics for ", campaign, area);
     return "";
   }
@@ -69,21 +78,28 @@ const getTopPics = async (campaign, area) => {
 
   return topPics;
 }
-const getTopComments = async (campaign, area) => {
+const getTopComments = async (campaign, area=null) => {
 
-  //console.log("getting top comments for ", campaign, area)
-
-  const { data, error } = await supabase
+  const q = area
+    ? supabase
     .from('comments')
     .select("*")
     .eq("campaign", campaign)
     .ilike("area", area)
     .is("star", true)
-    .limit(3)
+      .limit(3)
+    : qEU = supabase
+    .from('comments')
+    .select("*")
+    .eq("campaign", campaign)
+    .is("star", true)
+      .limit(3)
+
+    const { data, error } = await q;
 
   if (error) console.log("error getting top comments", error)
 
-  if (data.length === 0) {
+  if (data.length < 3) {
     console.log("no top comments for ", campaign, area);
     return "";
   }
@@ -91,11 +107,11 @@ const getTopComments = async (campaign, area) => {
   let topComments = "";
 
   data.map((comment) => {
-    topComments += `<p><b>${comment.name.split(",")[0]}: </b>${comment.comment}</p>`
+    topComments += `<p><b>${comment.name}: </b>${comment.comment}</p>`
   });
 
   return `<div style="background-color: #d3d3d3; padding: 1%">${topComments}</div>`;
 }
 
-module.exports = { supabase, getDigests, getTopPics, getTopComments, getTargets };
+module.exports = { supabase, getDigests, getTopPics, getTopComments };
 
