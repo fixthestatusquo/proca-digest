@@ -2,6 +2,7 @@ require("dotenv").config();
 const color = require("cli-color");
 const { getDigests } = require("./api");
 const { filter } = require("./targets");
+const { getSender } = require("./template");
 const {preview } = require("./mailer");
 
 
@@ -32,13 +33,12 @@ const main = async () => {
   let targets = await getDigests(campaign, "pending");
   console.log("targetting ", targets.length, " from ", campaign);
   targets=filter(targets,argv.target);
-
+  const sender = getSender(campaign);
   for (const i in targets) {
     const target = targets[i];
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
-    const r = await prepare(target, templateName, campaign);
-      const info= await preview (target.email,target.subject,target.body);
+      const info= await preview (target.email,target.subject,target.body,sender);
 
     console.log(color.green(info.url));
   }

@@ -65,8 +65,8 @@ const q = area ?
 
   if (error) console.error("error getting top pics", error)
 
-  if (data.length < 3) {
-    console.error("no top pics for ", campaign, area);
+  if (data.length === 0) {
+    console.error("  no top pics for", campaign, area);
     return "";
   }
 
@@ -99,8 +99,8 @@ const getTopComments = async (campaign, area=null) => {
 
   if (error) console.log("error getting top comments", error)
 
-  if (data.length < 3) {
-    console.log("no top comments for ", campaign, area);
+  if (data.length === 0) {
+    console.log("  no top comments for", campaign, area);
     return "";
   }
 

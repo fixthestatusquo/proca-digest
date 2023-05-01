@@ -28,8 +28,7 @@ const transporter = nodemailer.createTransport({
     // todo: put service  and host in .env ...or config on proca?
 //    service: "gmail",
     host: process.env.SMTP_HOST,
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    secure: true, // true for 465, false for other ports
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,

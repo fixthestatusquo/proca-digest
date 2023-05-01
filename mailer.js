@@ -8,7 +8,7 @@ const previewUrl = (info) => {
   if (nodemailer.getTestMessageUrl) {
     return nodemailer.getTestMessageUrl(info);
   }
-  }
+};
 
 const initPreview = async () => {
   return new Promise((resolve, reject) => {
@@ -17,7 +17,7 @@ const initPreview = async () => {
         console.error("Failed to create a testing account. " + err.message);
         reject("Failed to create a testing account. " + err.message);
       }
-//      console.log(account, "test credentials obtained");
+      //      console.log(account, "test credentials obtained");
 
       // Create a SMTP transporter object
       transporter = nodemailer.createTransport({
@@ -49,39 +49,39 @@ const init = (config) => {
   return transporter;
 };
 
-const sendDigest = async (email, subject, body) => {
+const sendDigest = async (email, subject, body, sender) => {
   return new Promise((resolve, reject) => {
-  transporter.sendMail(
-    {
-      from: '"Bruce Wayne 🦇" <bruce.wayne@gmail.com>', // sender address TODO: take from campaign.config
-      to: transporter.transporter.auth.user, // list of receivers
-      to: email,
-      subject: subject,
-      //TO DO: add plain
-      html: body,
-    },
-    (err, info) => {
-      if (err) {
-        console.log("Error occurred. " + err.message);
-        reject("Error occurred. " + err.message);
+    transporter.sendMail(
+      {
+        from: '"' + sender.name + '" <' + sender.email + ">",
+        to: transporter.transporter.auth.user, // list of receivers
+        to: email,
+        subject: subject,
+        //TO DO: add plain
+        html: body,
+      },
+      (err, info) => {
+        if (err) {
+          console.log("Error occurred. " + err.message);
+          reject("Error occurred. " + err.message);
+        }
+        return resolve(info);
       }
-      return resolve(info);
-    }
-  );
-});
+    );
+  });
 };
 
-const preview = async (email, subject, body) => {
+const preview = async (email, subject, body, sender) => {
   if (!transporter) {
-    await initPreview ();
+    await initPreview();
   }
-  if  (transporter.options.host !== 'smtp.ethereal.email') { //extra security
+  if (transporter.options.host !== "smtp.ethereal.email") {
+    //extra security
     console.error(color.red("invalid preview host", transporter.options.host));
     throw new Error("invalid transporter for preview");
   }
-  const info= await sendDigest (email,subject, body);
-  return {url:previewUrl(info), ...info};
-}
+  const info = await sendDigest(email, subject, body, sender);
+  return { url: previewUrl(info), ...info };
+};
 
 module.exports = { sendDigest, init, preview, initPreview, previewUrl };
-

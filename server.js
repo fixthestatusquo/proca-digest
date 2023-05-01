@@ -98,7 +98,6 @@ const getStats = async (campaign) => {
   response.campaign.stats.supporterCountByArea.forEach (d => {
      supporters.country[d.area] = d.count;
   });
-console.log(supporters);
   return supporters;
 }
 

@@ -33,6 +33,23 @@ i18next.init({
   },
 });
 
+const getCampaign = (campaign) => {
+  const p = path.resolve(
+    __dirname,
+    configFolder + `/campaign/${campaign}.json`
+  );
+  if (!fs.existsSync(p)) {
+    console.error(color.red("no campaign config file for", campaign));
+    process.exit(1);
+  }
+  return JSON.parse(fs.readFileSync(p, "utf8"));
+}
+
+const getSender = campaignName => {
+  const campaign = getCampaign(campaignName);
+  return campaign.config.component.email.sender;
+}
+
 const resolve = (campaign, name, lang, ext) => {
   const p = path.resolve(
     __dirname,
@@ -85,36 +102,31 @@ const getTokens = (html) => {
   return tokens;
 };
 
-const getLetter = (campaign, locale = "en") => {
-  const p = path.resolve(
-    __dirname,
-    configFolder + `/campaign/${campaign}.json`
-  );
-  if (!fs.existsSync(p)) {
-    console.warn(color.red("no campaign config file for", campaign));
-  }
-  const locales = JSON.parse(fs.readFileSync(p, "utf8")).config?.locales;
+const getLetter = (campaignName, locale = "en") => {
+  const campaign=getCampaign(campaignName);
+  const locales = campaign.config.locales;
 
-  const texts = locales[locale] || null;
+  let texts = locales[locale] || null;
 
   if (!texts || !texts["server:"] || !texts["server:"].letter) {
-    console.warn(color.red("no letter for ", locale), "defaulting to en");
+    console.warn(color.yellow("  no letter for", locale), "defaulting to en");
     locale = "en";
+    texts = locales[locale];
   }
 
   return `<div style="border: solid #d3d3d3 10px; padding: 2%">${snarkdown(
     texts["server:"].letter)}</div>`;
 };
 
-const getBackup = (backupFile) => {
+const getFallback = (fallbackFile) => {
   const p = path.resolve(
     __dirname,
-    from + `${backupFile}`
+    from + `${fallbackFile}`
   );
   if (!fs.existsSync(p)) {
-    console.warn(color.red("no backup for ", backupFile));
+    console.warn(color.red("no fallback for ", fallbackFile));
   }
   return fs.readFileSync(p, "utf8");
 }
 
-module.exports = { subject, html, insertVariables, getTokens, getLetter, getBackup };
+module.exports = { subject, html, insertVariables, getTokens, getLetter, getFallback, getCampaign, getSender };
