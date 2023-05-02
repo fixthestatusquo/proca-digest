@@ -38,13 +38,12 @@ const help = () => {
       "--lang (default language if not specified in source)",
       "--force process even if there are already pending digests waiting to be sent",
       "--min skip the sending if supporter counts below min -or use fallback template",
-      "--fallback=template to use if not enough supporters in the country of the target",
+      "--fallback template to use if no tops or something else is missing or below min",
       "--dry-run",
       "--verbose",
       "--csv|no-csv generate a csv with the targets + some variables",
       "--preview (genereate a link to etheral.mail with a preview of the message)",
       "--target= email@example.org or number of targets to process",
-      "--fallback template to use if no tops or something else is missing",
       "{campaign_name}",
     ].join("\n")
   );
@@ -90,8 +89,7 @@ if (argv.help || !campaign) return help();
 if (!argv.file) argv.file = campaign;
 let templateName = argv["template"]; // TODO: for each target, check if the target has received an email, "initial", otherwise, "default"
 const sourceName = argv["file"] || arg["source"]; //source as a legacy fallback
-const fallback = argv["fallback"];
-
+const fallback = argv["fallback"] === "" ? "fallback" : argv["fallback"];
 console.log(
   color.green("timestamp of the digest", dateFormat(createdAt)),
   createdAt.toString()
@@ -109,6 +107,8 @@ const prepare = async (target, templateName, campaign, data) => {
     return;
   }
   const locale = argv.locale || target.locale;
+  const pics = await getTopPics (campaign, target.area);
+  const comments = await getTopComments(campaign, target.area);
   let variables = {
     target: {...target},
     country: {
@@ -119,21 +119,33 @@ const prepare = async (target, templateName, campaign, data) => {
     total: data.total,
     campaign: { letter: getLetter(campaign, locale) },
     top: {
-      pictures: await getTopPics(campaign, target.area),
-      comments: await getTopComments(campaign, target.area),
+      pictures: pics.html,
+      comments: comments.html
     },
   };
+  variables.comments = comments.data;
+  variables.pictures = pics.data;
   delete variables.target.email;
   delete variables.target.externalId;
   delete variables.target.field;
   let s;
   let template;
-  if ((data.country[target.area] < argv.min || variables.top.comments === "" || variables.top.pictures === "") && fallback) {
+  if ((data.country[target.area] < argv.min || !variables.comments || !variables.pictures === 0) && fallback) {
     console.warn (color.yellow ("fallback for",target.name),"from",target.area,data.country[target.area], "supporters");
-    s = getFallback(`${campaign}/${templateName}/${fallback}.json`);
-    template = getFallback(`${campaign}/${templateName}/${fallback}.html`);
-    variables.top.comments = await getTopComments(campaign);
-    variables.top.pictures = await getTopPics(campaign);
+    const  fallbackSubject = subject(campaign, fallback, locale);
+
+    if (fallbackSubject) {
+      s = fallbackSubject;
+    } else {  
+      s = subject(campaign, templateName, locale);
+    }
+    template = html(campaign, fallback, locale);
+    const pics = await getTopPics (campaign);
+    const comments = await getTopComments(campaign);
+    variables.top.comments = comments.html;
+    variables.top.pictures = pics.html;
+    variables.comments = comments.data;
+    variables.pictures = pics.data;
   } else {
     s = subject(campaign, templateName, locale);
     template = html(campaign, templateName, locale);
@@ -142,7 +154,7 @@ const prepare = async (target, templateName, campaign, data) => {
   const tokens = getTokens(template);
   if (argv.verbose) console.log("We need variables for each of these", tokens);
   if (!s) {
-    console.error("Subject not found:", target);
+    console.error(color.red("Subject not found:", target.name));
     throw new Error("Subject not found:", target);
   }
   if (!template) {
@@ -155,6 +167,7 @@ const prepare = async (target, templateName, campaign, data) => {
 
   if (argv.verbose) console.log(target.email, locale, templateName, s);
 
+  delete variables.top;
   const info = {
     created_at: createdAt,
     subject: s,

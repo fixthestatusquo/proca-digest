@@ -68,10 +68,15 @@ const resolve = (campaign, name, lang, ext) => {
 const subject = (campaign, name, lang) => {
   let p = resolve(campaign, name, lang, "json");
   if (!fs.existsSync(p)) {
-    console.error("Subject does not exist:", p);
-    return;
+    console.error("config file missing", p);
+    return false;
   }
-  return JSON.parse(fs.readFileSync(p, "utf8")).meta.subject;
+  let config = JSON.parse(fs.readFileSync(p, "utf8"));
+  if (!config.meta?.subject) {
+    let p = resolve(campaign, name, "en", "json");
+    config = JSON.parse(fs.readFileSync(p, "utf8")); 
+  }
+  return config.meta.subject;
 };
 
 const insertVariables = (template, variables) => {

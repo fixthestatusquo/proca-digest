@@ -5,12 +5,23 @@ const supaAdminKey = process.env.SUPABASE_SECRET_KEY;
 
 const supabase = createClient(supaUrl, supaAdminKey);
 
+const setStatus = async (id, status = "sent") => {
+  const { data, error } = await supabase
+  .from('digest')
+  .update({ status: status, "updated_at": "NOW()" })
+  .eq('id', id);
+
+  console.log(data,error);
+  return true;
+}
+
 const getDigests = async ( campaign, status = "pending") => {
   const { data, error } = await supabase
   .from('digest')
   .select("*")
   .eq('status',status)
   .eq('campaign',campaign)
+  .order("id")
   if (error)
     throw error;
 
@@ -76,7 +87,7 @@ const q = area ?
     topPics += `<p><b>${pic.legend}: </b></p><img src="${makeUrl(campaign, pic.hash)}" style=${style} alt="${pic.id}" />`
   });
 
-  return topPics;
+  return {data:data,html:topPics};
 }
 const getTopComments = async (campaign, area=null) => {
 
@@ -110,8 +121,8 @@ const getTopComments = async (campaign, area=null) => {
     topComments += `<p><b>${comment.name}: </b>${comment.comment}</p>`
   });
 
-  return `<div style="background-color: #d3d3d3; padding: 1%">${topComments}</div>`;
+  return {data:data, html:`<div style="background-color: #d3d3d3; padding: 1%">${topComments}</div>`};
 }
 
-module.exports = { supabase, getDigests, getTopPics, getTopComments };
+module.exports = { supabase, getDigests, getTopPics, getTopComments, setStatus };
 

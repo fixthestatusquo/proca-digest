@@ -19,4 +19,14 @@ the config folder should map the one you hopefully have already on proca (widget
 
 ## preview
 
-the preview relies on etheral.email, create an account there and put it into ETHEREAL_ACCOUNT=user:password
+the preview relies on etheral.email or on mailhog
+
+if you haven't installed mailhog (a local test smtp server)yet:
+
+    sudo apt-get -y install golang-go
+    go install github.com/mailhog/MailHog@latest
+
+Then, start MailHog by running 
+
+    ~/go/bin//path/to/MailHog
+
