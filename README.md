@@ -28,5 +28,20 @@ if you haven't installed mailhog (a local test smtp server)yet:
 
 Then, start MailHog by running 
 
-    ~/go/bin//path/to/MailHog
+    ~/go/bin/MailHog
+
+## setup per campaign
+
+to run a digest on a campaign, you need to set up a few things in proca (widget)
+
+- put component.digest.sender {email and name params} (sender to be used for the digest)
+- yarn target --digest [campaign_name] [--file=something]
+by default, it will create a target list with all contacts in the source, but you can send the digests to a sub-group only (they technically don't even need to be in the 
+- yarn digest [campaign_name] [--mjml=default] create an html template for each available language in the campaign (you'll need to update it everytime you update the language)
+
+once done, from proca-digest:
+
+- node prepare.js [campaign_name]  --help (lots of options)
+- node preview.js
+- node send.js
 

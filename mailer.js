@@ -81,8 +81,7 @@ console.log(email);
     transporter.sendMail(
       {
         from: '"' + sender.name + '" <' + sender.email + ">",
-        //to: email,
-        to: "test@sydesy.com",
+        to: email,
         subject: subject,
         //TO DO: add plain
         html: body,
