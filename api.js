@@ -138,11 +138,9 @@ const getLastCount = async (campaign, email) => {
     const { data, error } = await q;
 
   if (error) console.log("error getting last count for" + email, error);
-  console.log(data);
   if (!data.variables) return { lastTotal: 0, lastCountryTotal: 0 };
 
   return { lastTotal: data.variables.total, lastCountryTotal: data.variables.country?.total };
-
 }
 
 module.exports = { supabase, getDigests, getTopPics, getTopComments, setStatus, getLastCount };
