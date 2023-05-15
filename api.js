@@ -77,21 +77,16 @@ const getTargets = async ( campaign, status = "pending") => {
 
 const getTopPics = async (campaign, area = null) => {
   //console.log("getting top pics for ", campaign, area)
-const q = area ?
+let q = 
  supabase
   .from('pictures')
   .select("*")
   .eq("campaign", campaign)
-  .ilike("area", area)
   .is("star", true)
+  .order("created_at", { ascending: false })
    .limit(3)
-: supabase
-  .from('pictures')
-  .select("*")
-    .eq("campaign", campaign)
-    .not('legend', 'like', '')
-  .is("star", true)
-    .limit(3)
+  if (area)
+  q = q.ilike("area", area)
 
   const { data, error } = await q;
 
@@ -112,20 +107,18 @@ const q = area ?
 }
 const getTopComments = async (campaign, area=null) => {
 
-  const q = area
-    ? supabase
-    .from('comments')
-    .select("*")
-    .eq("campaign", campaign)
-    .ilike("area", area)
-    .is("star", true)
-      .limit(3)
-    : qEU = supabase
+  let q = 
+   supabase
     .from('comments')
     .select("*")
     .eq("campaign", campaign)
     .is("star", true)
+  .order("created_at", { ascending: false })
       .limit(3)
+
+   if (area) 
+     q= q.ilike("area", area) //
+     
 
     const { data, error } = await q;
 

@@ -26,7 +26,7 @@ const initMailhog = async () => {
     host: "localhost",
     port: 1025
   });
-  console.log(color.blue("preview them mails on http://localhost:8025"));
+  console.log(color.blue("preview them mail on http://localhost:8025 - needs to run ~/go/bin/MailHog"));
   return transporter;
 }
 

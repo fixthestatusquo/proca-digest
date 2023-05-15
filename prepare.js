@@ -13,13 +13,13 @@ const { supabase, getDigests, getTopPics, getTopComments, getLastCount } = requi
 const { getTargets, filter } = require("./targets");
 const color = require("cli-color");
 const countries = require("i18n-iso-countries");
-const { preview } = require("./mailer");
+const { preview, initPreview } = require("./mailer");
 const { getStats } = require("./server");
 let csv = "name,email,saluation,gender,language,area,external_id";
 
 const argv = require("minimist")(process.argv.slice(2), {
   boolean: ["help", "dry-run", "verbose", "csv"],
-  string: ["file","lang","template","fallback",],
+  string: ["file","lang","template","fallback","preview"],
 //  unknown: (param) => {param[0] === '-' ? console.error("invalid parameter",param) || process.exit(1) : true},
   default: { template: "default", csv: true, min: 0 },
 });
@@ -43,7 +43,7 @@ const help = () => {
       "--dry-run",
       "--verbose",
       "--csv|no-csv generate a csv with the targets + some variables",
-      "--preview (genereate a link to etheral.mail with a preview of the message)",
+      "--preview ( 'etherhal' or 'mailhog')",
       "--target= email@example.org or number of targets to process",
       "{campaign_name}",
     ].join("\n")
@@ -96,6 +96,10 @@ console.log(
   createdAt.toString()
 );
 let targets = getTargets(sourceName,campaign);
+if (targets.length ===0) {
+  console.error(color.red("no targets found",argv.file));
+  process.exit(1);
+}
 console.log("targetting", targets.length, "from", sourceName);
 const sender = getSender(campaign);
 
@@ -211,6 +215,7 @@ const main = async () => {
   targets = filter(targets, argv.target);
 
   if (argv.preview) {
+    await initPreview(argv.preview);
     csv + ",preview";
   }
   for (const i in targets) {
