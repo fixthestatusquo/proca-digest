@@ -65,6 +65,14 @@ const resolve = (campaign, name, lang, ext) => {
   return p;
 };
 
+const pickOne = text => {
+  const variants = text
+    .split("\n")
+    .map((d) => d.trim())
+
+  return variants[Math.floor(Math.random() * variants.length)];
+};
+
 const subject = (campaign, name, lang) => {
   let p = resolve(campaign, name, lang, "json");
   if (!fs.existsSync(p)) {
@@ -76,7 +84,7 @@ const subject = (campaign, name, lang) => {
     let p = resolve(campaign, name, "en", "json");
     config = JSON.parse(fs.readFileSync(p, "utf8")); 
   }
-  return config.meta.subject;
+  return pickOne(config.meta.subject);
 };
 
 const insertVariables = (template, variables) => {

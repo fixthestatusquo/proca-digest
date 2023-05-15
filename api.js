@@ -14,14 +14,35 @@ const setStatus = async (id, status = "sent") => {
   console.log(data,error);
   return true;
 }
+const getDigestsSummary = async ( campaign) => {
+  let query =supabase
+  .from('digests')
+  .select("*")
+  .eq('campaign',campaign)
+  .order("created_at", { ascending: false })
 
-const getDigests = async ( campaign, status = "pending") => {
-  const { data, error } = await supabase
+
+  const { data, error } = await query
+
+  if (error)
+    throw error;
+
+  return data;
+}
+
+
+const getDigests = async ( campaign, status = "pending", created_at = null) => {
+  let query = supabase
   .from('digest')
   .select("*")
   .eq('status',status)
   .eq('campaign',campaign)
   .order("id")
+
+  if (created_at) 
+    query = query.eq('created_at', created_at)
+
+  const { data, error } = await query;
   if (error)
     throw error;
 
@@ -124,5 +145,5 @@ const getTopComments = async (campaign, area=null) => {
   return {data:data, html:`<div style="background-color: #d3d3d3; padding: 1%">${topComments}</div>`};
 }
 
-module.exports = { supabase, getDigests, getTopPics, getTopComments, setStatus };
+module.exports = { supabase, getDigests, getDigestsSummary, getTopPics, getTopComments, setStatus };
 

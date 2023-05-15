@@ -1,31 +1,10 @@
 const readline = require("readline");
 require("dotenv").config();
 const color = require("cli-color");
-const { getDigests, setStatus } = require("./api");
+const { getDigests, getDigestsSummary, setStatus } = require("./api");
 const { filter } = require("./targets");
 const { getSender } = require("./template");
 const { sendDigest, init } = require("./mailer");
-
-const confirm = async (query = "Press [Y] to continue:") => {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise((resolve) =>
-    rl.question(query, (answser) => {
-      const input =answser.trim().toLowerCase();
-      if (input === "y") {
-        resolve();
-        return;
-      }
-      if (input !== "n") {
-        console.log(color.yellow(query));
-      }
-        rl.close();
-        process.exit(1);
-    })
-  );
-};
 
 const help = (status = 0) => {
   console.log(
@@ -34,6 +13,7 @@ const help = (status = 0) => {
       "--dry-run",
       "--to substitute recipient to handle the emails",
       "--verbose",
+      "--date= date of the digest to review",
       "--target= email@example.org or number of targets to process",
       "{campaign_name}",
     ].join("\n")
@@ -43,7 +23,7 @@ const help = (status = 0) => {
 
 const argv = require("minimist")(process.argv.slice(2), {
   boolean: ["help", "dry-run", "verbose"],
-  string: ["to"],
+  string: ["to","date"],
   unknown: (d) => {
     const allowed = ["target"]; //merge with boolean and string?
     if (d[0] !== "-") return true;
@@ -61,15 +41,18 @@ const campaign = argv._[0];
 if (require.main === module) {
   if (argv.help || !campaign) return help();
   const main = async () => {
-    if (!argv.to && !argv['dry-run'])
-      await confirm();
-
-    let targets = await getDigests(campaign, "pending");
+    if (!argv.date) {
+    let digests= await getDigestsSummary(campaign);
+      console.log(digests); 
+      console.log(color.blue("add --date=  one of the dates of the digest"));
+      return;
+    }
+    let targets = await getDigests(campaign, "sent",argv.date);
     if (targets.length === 0) {
-      console.error(color.red("no email to send, run prepare"));
+      console.error(color.red("no email sent at ",argv.date,", run prepare+mailer"));
       process.exit(1);
     }
-    console.log("targetted", targets.length, "from", campaign);
+    console.log("sent to", targets.length, "from", campaign);
     targets = filter(targets, argv.target);
     const sender = getSender(campaign);
     //  const sender = {email:"xavier@fixthestatusquo.org","name":"restore nature"};
@@ -83,10 +66,16 @@ if (require.main === module) {
       console.log("dry run, you might want to set the 'to' param instead");
       process.exit(1);
     }
+    if (!argv.to) {
+      console.log("we do not resend, only send copy to --to param");
+      process.exit(1);
+    }
     for (const i in targets) {
       const target = targets[i];
+      let recipient = target.email;
       // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
       // if in that list -> template= default, else -> initial
+      if (argv.to) {
         recipient = argv.to;
         if (!argv.target) {
           console.log(
@@ -94,6 +83,7 @@ if (require.main === module) {
           );
           argv.target = 1;
         }
+      }
 
       const info = await sendDigest(
         recipient,
