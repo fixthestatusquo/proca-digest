@@ -62,10 +62,6 @@ if (require.main === module) {
       pass: process.env.SMTP_PASSWORD,
     });
 
-    if (argv["dry-run"]) {
-      console.log("dry run, you might want to set the 'to' param instead");
-      process.exit(1);
-    }
     if (!argv.to) {
       console.log("we do not resend, only send copy to --to param");
       process.exit(1);
@@ -85,6 +81,10 @@ if (require.main === module) {
         }
       }
 
+    if (argv["dry-run"]) {
+      console.log("sent", target.email, target.subject);
+      return;
+    }
       const info = await sendDigest(
         recipient,
         target.subject,
