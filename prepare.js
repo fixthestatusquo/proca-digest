@@ -9,7 +9,7 @@ const {
   getFallback,
   getSender
 } = require("./template");
-const { supabase, getDigests, getTopPics, getTopComments } = require("./api");
+const { supabase, getDigests, getTopPics, getTopComments, getLastCount } = require("./api");
 const { getTargets, filter } = require("./targets");
 const color = require("cli-color");
 const countries = require("i18n-iso-countries");
@@ -99,7 +99,7 @@ let targets = getTargets(sourceName,campaign);
 console.log("targetting", targets.length, "from", sourceName);
 const sender = getSender(campaign);
 
-const prepare = async (target, templateName, campaign, data) => {
+const prepare = async (target, templateName, campaign, data, last) => {
   if (!target.locale && target.lang && argv.lang) {
     console.warn("no language for", target.name, target.email);
   }
@@ -116,9 +116,9 @@ const prepare = async (target, templateName, campaign, data) => {
     country: {
       code: target.area,
       name: countries.getName(target.area, locale) || "",
-      total: data.country[target.area],
+      total: data.country[target.area] - last.lastCountryTotal,
     },
-    total: data.total,
+    total: data.total - last.lastTotal,
     campaign: { letter: getLetter(campaign, locale) },
     top: {
       pictures: pics.html,
@@ -132,13 +132,14 @@ const prepare = async (target, templateName, campaign, data) => {
   delete variables.target.field;
   let s;
   let template;
+  console.log("data:", data.total, "last:", last.lastTotal, variables.total)
   if ((data.country[target.area] < argv.min || !variables.comments || !variables.pictures === 0) && fallback) {
     console.warn (color.yellow ("fallback for",target.name),"from",target.area,data.country[target.area], "supporters");
     const  fallbackSubject = subject(campaign, fallback, locale);
 
     if (fallbackSubject) {
       s = fallbackSubject;
-    } else {  
+    } else {
       s = subject(campaign, templateName, locale);
     }
     template = html(campaign, fallback, locale);
@@ -217,7 +218,9 @@ const main = async () => {
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
     csv += `\n${target.name},${target.email},${target.salutation},${target.gender},${target.locale},${target.area},${target.externalId}`;
-    const r = await prepare({...targets[i]}, templateName, campaign, stats);
+    const last = await getLastCount(campaign, target.email);
+
+    const r = await prepare({ ...targets[i] }, templateName, campaign, stats, last);
     if (argv.preview) {
       const b = insertVariables(r.body, r.variables);
       const info = await preview(r.email, r.subject, b, sender);
