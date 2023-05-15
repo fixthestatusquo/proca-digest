@@ -124,5 +124,26 @@ const getTopComments = async (campaign, area=null) => {
   return {data:data, html:`<div style="background-color: #d3d3d3; padding: 1%">${topComments}</div>`};
 }
 
-module.exports = { supabase, getDigests, getTopPics, getTopComments, setStatus };
+const getLastCount = async (campaign, email) => {
+
+  const q = supabase
+    .from('digest')
+    .select("variables")
+    .eq("campaign", campaign)
+    .eq("email", email)
+    .order("id", { ascending: false })
+    .limit(1)
+    .single();
+
+    const { data, error } = await q;
+
+  if (error) console.log("error getting last count for" + email, error);
+  console.log(data);
+  if (!data.variables) return { lastTotal: 0, lastCountryTotal: 0 };
+
+  return { lastTotal: data.variables.total, lastCountryTotal: data.variables.country?.total };
+
+}
+
+module.exports = { supabase, getDigests, getTopPics, getTopComments, setStatus, getLastCount };
 
