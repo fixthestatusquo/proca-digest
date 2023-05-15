@@ -120,10 +120,10 @@ const prepare = async (target, templateName, campaign, data, last) => {
     country: {
       code: target.area,
       name: countries.getName(target.area, locale) || "",
-      total: data.country[target.area] - last.lastCountryTotal,
+      total: data.country[target.area],
     },
     total: data.total - last.lastTotal,
-    campaign: { letter: getLetter(campaign, locale) },
+    campaign: { letter: getLetter(campaign, locale), period: { total: data.total - last.lastTotal, country: data.country[target.area] - last.lastCountryTotal} },
     top: {
       pictures: pics.html,
       comments: comments.html
@@ -136,7 +136,7 @@ const prepare = async (target, templateName, campaign, data, last) => {
   delete variables.target.field;
   let s;
   let template;
-  console.log("data:", data.total, "last:", last.lastTotal, variables.total)
+
   if ((data.country[target.area] < argv.min || !variables.comments || !variables.pictures === 0) && fallback) {
     console.warn (color.yellow ("fallback for",target.name),"from",target.area,data.country[target.area], "supporters");
     const  fallbackSubject = subject(campaign, fallback, locale);
