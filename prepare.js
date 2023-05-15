@@ -122,7 +122,7 @@ const prepare = async (target, templateName, campaign, data, last) => {
       name: countries.getName(target.area, locale) || "",
       total: data.country[target.area],
     },
-    total: data.total - last.lastTotal,
+    total: data.total,
     campaign: { letter: getLetter(campaign, locale), period: { total: data.total - last.lastTotal, country: data.country[target.area] - last.lastCountryTotal} },
     top: {
       pictures: pics.html,
