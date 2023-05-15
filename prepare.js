@@ -223,7 +223,9 @@ const main = async () => {
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
     csv += `\n${target.name},${target.email},${target.salutation},${target.gender},${target.locale},${target.area},${target.externalId}`;
-    const last = await getLastCount(campaign, target.email);
+    const last = argv["template"].indexOf('initial') > -1
+      ? { lastTotal: 0, lastCountryTotal: 0 }
+      : await getLastCount(campaign, target.email);
 
     const r = await prepare({ ...targets[i] }, templateName, campaign, stats, last);
     if (argv.preview) {
