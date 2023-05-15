@@ -39,7 +39,7 @@ const getDigests = async ( campaign, status = "pending", created_at = null) => {
   .eq('campaign',campaign)
   .order("id")
 
-  if (created_at) 
+  if (created_at)
     query = query.eq('created_at', created_at)
 
   const { data, error } = await query;
@@ -77,7 +77,7 @@ const getTargets = async ( campaign, status = "pending") => {
 
 const getTopPics = async (campaign, area = null) => {
   //console.log("getting top pics for ", campaign, area)
-let q = 
+let q =
  supabase
   .from('pictures')
   .select("*")
@@ -107,7 +107,7 @@ let q =
 }
 const getTopComments = async (campaign, area=null) => {
 
-  let q = 
+  let q =
    supabase
     .from('comments')
     .select("*")
@@ -116,9 +116,9 @@ const getTopComments = async (campaign, area=null) => {
   .order("created_at", { ascending: false })
       .limit(3)
 
-   if (area) 
+   if (area)
      q= q.ilike("area", area) //
-     
+
 
     const { data, error } = await q;
 
@@ -152,9 +152,10 @@ const getLastCount = async (campaign, email) => {
     const { data, error } = await q;
 
   if (error) console.log("error getting last count for" + email, error);
-  if (!data.variables) return { lastTotal: 0, lastCountryTotal: 0 };
 
-  return { lastTotal: data.variables.total, lastCountryTotal: data.variables.country?.total };
+  if (!data)  return { lastTotal: 0, lastCountryTotal: 0 };
+
+  return { lastTotal: data.variables?.total || 0, lastCountryTotal: data.variables?.country?.total || 0};
 }
 
 module.exports = { supabase, getDigests, getDigestsSummary, getTopPics, getTopComments, setStatus, getLastCount };
