@@ -7,6 +7,7 @@ const {
   insertVariables,
   getLetter,
   getFallback,
+  getSender
 } = require("./template");
 const { supabase, getDigests, getTopPics, getTopComments } = require("./api");
 const { getTargets, filter } = require("./targets");
@@ -96,6 +97,7 @@ console.log(
 );
 let targets = getTargets(sourceName,campaign);
 console.log("targetting", targets.length, "from", sourceName);
+const sender = getSender(campaign);
 
 const prepare = async (target, templateName, campaign, data) => {
   if (!target.locale && target.lang && argv.lang) {
@@ -218,7 +220,7 @@ const main = async () => {
     const r = await prepare({...targets[i]}, templateName, campaign, stats);
     if (argv.preview) {
       const b = insertVariables(r.body, r.variables);
-      const info = await preview(r.email, r.subject, b);
+      const info = await preview(r.email, r.subject, b, sender);
       console.log(color.green(info.url));
       csv +=','+info.url;
     }
