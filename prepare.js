@@ -214,10 +214,11 @@ const main = async () => {
   }
   targets = filter(targets, argv.target);
 
-  if (argv.preview) {
+  if (argv.preview !== undefined) {
     await initPreview(argv.preview);
     csv + ",preview";
   }
+
   for (const i in targets) {
     const target = targets[i];
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
@@ -228,9 +229,11 @@ const main = async () => {
     const r = await prepare({ ...targets[i] }, templateName, campaign, stats, last);
     if (argv.preview) {
       const b = insertVariables(r.body, r.variables);
-      const info = await preview(r.email, r.subject, b, sender);
-      console.log(color.green(info.url));
-      csv +=','+info.url;
+      if (argv.preview !== undefined) {
+        const info = await preview(r.email, r.subject, b, sender);
+        console.log(color.green(info.url));
+          csv +=','+info.url;
+      }
     }
   }
   writeCsv();
