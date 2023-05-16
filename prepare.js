@@ -120,10 +120,10 @@ const prepare = async (target, templateName, campaign, data, last) => {
     country: {
       code: target.area,
       name: countries.getName(target.area, locale) || "",
-      total: data.country[target.area] - last.lastCountryTotal,
+      total: data.country[target.area],
     },
-    total: data.total - last.lastTotal,
-    campaign: { letter: getLetter(campaign, locale) },
+    total: data.total,
+    campaign: { letter: getLetter(campaign, locale), period: { total: data.total - last.lastTotal, country: data.country[target.area] - last.lastCountryTotal} },
     top: {
       pictures: pics.html,
       comments: comments.html
@@ -136,7 +136,7 @@ const prepare = async (target, templateName, campaign, data, last) => {
   delete variables.target.field;
   let s;
   let template;
-  console.log("data:", data.total, "last:", last.lastTotal, variables.total)
+
   if ((data.country[target.area] < argv.min || !variables.comments || !variables.pictures === 0) && fallback) {
     console.warn (color.yellow ("fallback for",target.name),"from",target.area,data.country[target.area], "supporters");
     const  fallbackSubject = subject(campaign, fallback, locale);
@@ -224,7 +224,9 @@ const main = async () => {
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
     csv += `\n${target.name},${target.email},${target.salutation},${target.gender},${target.locale},${target.area},${target.externalId}`;
-    const last = await getLastCount(campaign, target.email);
+    const last = argv["template"].indexOf('initial') > -1
+      ? { lastTotal: 0, lastCountryTotal: 0 }
+      : await getLastCount(campaign, target.email);
 
     const r = await prepare({ ...targets[i] }, templateName, campaign, stats, last);
     if (argv.preview) {
