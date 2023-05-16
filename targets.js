@@ -66,6 +66,10 @@ const filter = (targets, criteria) => {
   } else {
     console.log("...but processing only", criteria);
     const d = targets.find( d => d.email === criteria);
+    if (!d) {
+      console.error(color.red("no target with email=",criteria));
+      process.exit(1);
+    }
     return [d];
   }
   console.error("don't know how to filter",criteria);

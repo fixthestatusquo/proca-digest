@@ -66,9 +66,11 @@ const resolve = (campaign, name, lang, ext) => {
 };
 
 const pickOne = text => {
+
   const variants = text
     .split("\n")
     .map((d) => d.trim())
+    .filter (d => d) //remove empty lines
 
   return variants[Math.floor(Math.random() * variants.length)];
 };
@@ -84,6 +86,7 @@ const subject = (campaign, name, lang) => {
     let p = resolve(campaign, name, "en", "json");
     config = JSON.parse(fs.readFileSync(p, "utf8")); 
   }
+  if (!config.meta.subject) return;
   return pickOne(config.meta.subject);
 };
 

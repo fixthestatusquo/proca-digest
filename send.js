@@ -87,8 +87,8 @@ if (require.main === module) {
       const target = targets[i];
       // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
       // if in that list -> template= default, else -> initial
-        recipient = argv.to;
-        if (!argv.target) {
+        recipient = argv.to ? argv.to : target.email ;
+        if (argv.to && !argv.target) {
           console.log(
             color.yellow("set target=n when to is defined, we defaulted to 1 ")
           );
@@ -102,15 +102,17 @@ if (require.main === module) {
         sender
       );
       if (info.accepted.length >= 1) {
-        console.log("sent", target.email, argv.to && "replaced by " + argv.to);
         if (!argv.to && !argv['dry-run']) {
+          console.log("sent", target.email);
           await setStatus(target.id, "sent");
+        } else {
+          console.log("sent", target.email, argv.to && "replaced by " + argv.to);
         }
       }
     }
   };
 
-  main().catch(console.error);
+  main().then ( () => process.exit(0)).catch(console.error);
 } else {
   //export a bunch
   module.exports = {};

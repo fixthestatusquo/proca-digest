@@ -43,7 +43,7 @@ if (require.main === module) {
   const main = async () => {
     if (!argv.date) {
     let digests= await getDigestsSummary(campaign);
-      console.log(digests); 
+      console.log("digests",digests); 
       console.log(color.blue("add --date=  one of the dates of the digest"));
       return;
     }

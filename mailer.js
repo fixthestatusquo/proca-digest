@@ -72,7 +72,6 @@ const init = (config) => {
 };
 
 const sendDigest = async (email, subject, body, sender) => {
-console.log(email);
   if (!transporter) {
     console.error("sender not configured");
     process.exit(1);

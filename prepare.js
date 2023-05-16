@@ -7,9 +7,15 @@ const {
   insertVariables,
   getLetter,
   getFallback,
-  getSender
+  getSender,
 } = require("./template");
-const { supabase, getDigests, getTopPics, getTopComments, getLastCount } = require("./api");
+const {
+  supabase,
+  getDigests,
+  getTopPics,
+  getTopComments,
+  getLastCount,
+} = require("./api");
 const { getTargets, filter } = require("./targets");
 const color = require("cli-color");
 const countries = require("i18n-iso-countries");
@@ -19,8 +25,8 @@ let csv = "name,email,saluation,gender,language,area,external_id";
 
 const argv = require("minimist")(process.argv.slice(2), {
   boolean: ["help", "dry-run", "verbose", "csv"],
-  string: ["file","lang","template","fallback","preview"],
-//  unknown: (param) => {param[0] === '-' ? console.error("invalid parameter",param) || process.exit(1) : true},
+  string: ["file", "lang", "template", "fallback", "preview"],
+  //  unknown: (param) => {param[0] === '-' ? console.error("invalid parameter",param) || process.exit(1) : true},
   default: { template: "default", csv: true, min: 0 },
 });
 
@@ -55,33 +61,31 @@ const createdAt = new Date();
 
 const dateFormat = (date) => {
   const utc = "getUTC"; // 'get'?
-  return (
-    "%Y%m%d_%H%M%S".replace(/%[YmdHMS]/g, function (m) {
-      switch (m) {
-        case "%Y":
-          return date[utc + "FullYear"](); // no leading zeros required
-        case "%m":
-          m = 1 + date[utc + "Month"]();
-          break;
-        case "%d":
-          m = date[utc + "Date"]();
-          break;
-        case "%H":
-          m = date[utc + "Hours"]();
-          break;
-        case "%M":
-          m = date[utc + "Minutes"]();
-          break;
-        case "%S":
-          m = date[utc + "Seconds"]();
-          break;
-        default:
-          return m.slice(1); // unknown code, remove %
-      }
-      // add leading zero if required
-      return ("0" + m).slice(-2);
-    })
-  );
+  return "%Y%m%d_%H%M%S".replace(/%[YmdHMS]/g, function (m) {
+    switch (m) {
+      case "%Y":
+        return date[utc + "FullYear"](); // no leading zeros required
+      case "%m":
+        m = 1 + date[utc + "Month"]();
+        break;
+      case "%d":
+        m = date[utc + "Date"]();
+        break;
+      case "%H":
+        m = date[utc + "Hours"]();
+        break;
+      case "%M":
+        m = date[utc + "Minutes"]();
+        break;
+      case "%S":
+        m = date[utc + "Seconds"]();
+        break;
+      default:
+        return m.slice(1); // unknown code, remove %
+    }
+    // add leading zero if required
+    return ("0" + m).slice(-2);
+  });
 };
 
 const campaign = argv._[0];
@@ -89,15 +93,15 @@ const campaign = argv._[0];
 if (argv.help || !campaign) return help();
 if (!argv.file) argv.file = campaign;
 let templateName = argv["template"]; // TODO: for each target, check if the target has received an email, "initial", otherwise, "default"
-const sourceName = argv["file"] || arg["source"]; //source as a legacy fallback
+const sourceName = argv["file"]; 
 const fallback = argv["fallback"] === "" ? "fallback" : argv["fallback"];
 console.log(
   color.green("timestamp of the digest", dateFormat(createdAt)),
   createdAt.toString()
 );
-let targets = getTargets(sourceName,campaign);
-if (targets.length ===0) {
-  console.error(color.red("no targets found",argv.file));
+let targets = getTargets(sourceName, campaign);
+if (targets.length === 0) {
+  console.error(color.red("no targets found", argv.file));
   process.exit(1);
 }
 console.log("targetting", targets.length, "from", sourceName);
@@ -108,25 +112,37 @@ const prepare = async (target, templateName, campaign, data, last) => {
     console.warn("no language for", target.name, target.email);
   }
 
-  if (!fallback && data.country[target.area] < argv.min ) {
-    console.warn (color.yellow ("skipping",target.name),target.area, "has only",data.country[target.area], "supporters");
+  if (!fallback && data.country[target.area] < argv.min) {
+    console.warn(
+      color.yellow("skipping", target.name),
+      target.area,
+      "has only",
+      data.country[target.area],
+      "supporters"
+    );
     return;
   }
   const locale = argv.locale || target.locale;
-  const pics = await getTopPics (campaign, target.area);
+  const pics = await getTopPics(campaign, target.area);
   const comments = await getTopComments(campaign, target.area);
   let variables = {
-    target: {...target},
+    target: { ...target },
     country: {
       code: target.area,
       name: countries.getName(target.area, locale) || "",
       total: data.country[target.area],
     },
     total: data.total,
-    campaign: { letter: getLetter(campaign, locale), period: { total: data.total - last.lastTotal, country: data.country[target.area] - last.lastCountryTotal} },
+    campaign: {
+      letter: getLetter(campaign, locale),
+      period: {
+        total: data.total - last.lastTotal,
+        country: data.country[target.area] - last.lastCountryTotal,
+      },
+    },
     top: {
       pictures: pics.html,
-      comments: comments.html
+      comments: comments.html,
     },
   };
   variables.comments = comments.data;
@@ -137,9 +153,20 @@ const prepare = async (target, templateName, campaign, data, last) => {
   let s;
   let template;
 
-  if ((data.country[target.area] < argv.min || !variables.comments || !variables.pictures === 0) && fallback) {
-    console.warn (color.yellow ("fallback for",target.name),"from",target.area,data.country[target.area], "supporters");
-    const  fallbackSubject = subject(campaign, fallback, locale);
+  if (
+    (data.country[target.area] < argv.min ||
+      !variables.comments ||
+      !variables.pictures === 0) &&
+    fallback
+  ) {
+    console.warn(
+      color.yellow("fallback for", target.name),
+      "from",
+      target.area,
+      data.country[target.area],
+      "supporters"
+    );
+    const fallbackSubject = subject(campaign, fallback, locale);
 
     if (fallbackSubject) {
       s = fallbackSubject;
@@ -147,7 +174,7 @@ const prepare = async (target, templateName, campaign, data, last) => {
       s = subject(campaign, templateName, locale);
     }
     template = html(campaign, fallback, locale);
-    const pics = await getTopPics (campaign);
+    const pics = await getTopPics(campaign);
     const comments = await getTopComments(campaign);
     variables.top.comments = comments.html;
     variables.top.pictures = pics.html;
@@ -213,7 +240,6 @@ const main = async () => {
     }
   }
   targets = filter(targets, argv.target);
-
   if (argv.preview !== undefined) {
     await initPreview(argv.preview);
     csv + ",preview";
@@ -224,17 +250,24 @@ const main = async () => {
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
     csv += `\n${target.name},${target.email},${target.salutation},${target.gender},${target.locale},${target.area},${target.externalId}`;
-    const last = argv["template"].indexOf('initial') > -1
-      ? { lastTotal: 0, lastCountryTotal: 0 }
-      : await getLastCount(campaign, target.email);
+    const last =
+      templateName === "initial"
+        ? { lastTotal: 0, lastCountryTotal: 0 }
+        : await getLastCount(campaign, target.email);
 
-    const r = await prepare({ ...targets[i] }, templateName, campaign, stats, last);
-    if (argv.preview) {
+    const r = await prepare(
+      { ...targets[i] },
+      templateName,
+      campaign,
+      stats,
+      last
+    );
+    if (argv.preview && r) {
       const b = insertVariables(r.body, r.variables);
       if (argv.preview !== undefined) {
         const info = await preview(r.email, r.subject, b, sender);
-        console.log(color.green(info.url));
-          csv +=','+info.url;
+        info.url && console.log(color.green(info.url));
+        csv += "," + info.url;
       }
     }
   }

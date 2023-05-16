@@ -50,8 +50,9 @@ if (targets.length ===0) {
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
       const info= await preview (target.email,target.subject,target.body,sender);
-    if (info.url)
+    if (info.url) 
       console.log(color.green(info.url));
+    
   }
 };
 
