@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const readline = require("readline");
 require("dotenv").config();
 const color = require("cli-color");
@@ -5,6 +6,16 @@ const { getDigests, setStatus } = require("./api");
 const { filter } = require("./targets");
 const { getSender } = require("./template");
 const { sendDigest, init } = require("./mailer");
+
+
+const pause = (time) => {
+    if (!time) { 
+      const min = 42; max = 360; // wait between 42 second and 6 minutes 
+      time = Math.floor(Math.random() * (max - min + 1) + min) *1000;
+      console.log("waiting",time/1000);
+    }
+    return new Promise(resolve => setTimeout(resolve, time));
+}
 
 const confirm = async (query = "Press [Y] to continue:") => {
   const rl = readline.createInterface({
@@ -34,6 +45,7 @@ const help = (status = 0) => {
       "--dry-run",
       "--to substitute recipient to handle the emails",
       "--verbose",
+      "--pause|no-pause (by default wait a min or 3 between sending emails)",
       "--target= email@example.org or number of targets to process",
       "{campaign_name}",
     ].join("\n")
@@ -42,7 +54,8 @@ const help = (status = 0) => {
 };
 
 const argv = require("minimist")(process.argv.slice(2), {
-  boolean: ["help", "dry-run", "verbose"],
+  boolean: ["help", "dry-run", "verbose","pause"],
+  default: {pause:true},
   string: ["to"],
   unknown: (d) => {
     const allowed = ["target"]; //merge with boolean and string?
@@ -52,10 +65,12 @@ const argv = require("minimist")(process.argv.slice(2), {
     help(1);
   },
 });
+
 if (argv._.length !== 1) {
   console.log(color.red("only one campaign param allowed"), argv._);
   help();
 }
+
 const campaign = argv._[0];
 
 if (require.main === module) {
@@ -108,6 +123,9 @@ if (require.main === module) {
         } else {
           console.log("sent", target.email, argv.to && "replaced by " + argv.to);
         }
+      }
+      if (argv.pause) {
+        await pause();
       }
     }
   };
