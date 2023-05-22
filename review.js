@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const readline = require("readline");
 require("dotenv").config();
 const color = require("cli-color");

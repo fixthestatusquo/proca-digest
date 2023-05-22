@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 require("dotenv").config();
 const color = require("cli-color");
 const { getDigests } = require("./api");
