@@ -77,8 +77,7 @@ const getTopPics = async (campaign, area = null) => {
     .is("star", true)
     .order("created_at", { ascending: false })
     .limit(3);
-  if (area) q = q.ilike("area", area);
-
+  if (area) q = q.eq("area", area);
   const { data, error } = await q;
 
   if (error) console.error("error getting top pics", error);
@@ -109,10 +108,9 @@ const getTopComments = async (campaign, area = null) => {
     .order("created_at", { ascending: false })
     .limit(3);
 
-  if (area) q = q.ilike("area", area); //
+  if (area) q = q.eq("area", area);
 
   const { data, error } = await q;
-
   if (error) console.log("error getting top comments", error);
 
   if (data.length === 0) {
