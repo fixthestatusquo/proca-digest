@@ -10,7 +10,7 @@ const { sendDigest, init } = require("./mailer");
 
 const pause = (time) => {
     if (!time) { 
-      const min = 42; max = 181; // wait between 42 second and 3 minutes 
+      const min = 19; max = 93; // wait between 19 second and 1.5min
       time = Math.floor(Math.random() * (max - min + 1) + min) *1000;
       console.log("waiting",time/1000);
     }
@@ -76,9 +76,6 @@ const campaign = argv._[0];
 if (require.main === module) {
   if (argv.help || !campaign) return help();
   const main = async () => {
-    if (!argv.to && !argv['dry-run'])
-      await confirm();
-
     let targets = await getDigests(campaign, "pending");
     if (targets.length === 0) {
       console.error(color.red("no email to send, run prepare"));
@@ -97,6 +94,10 @@ if (require.main === module) {
     if (argv["dry-run"]) {
       console.log("dry run, you might want to set the 'to' param instead");
       process.exit(1);
+    }
+
+    if (!argv.to && !argv['dry-run']) {
+      await confirm();
     }
     for (const i in targets) {
       const target = targets[i];

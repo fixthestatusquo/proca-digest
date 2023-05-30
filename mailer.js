@@ -16,7 +16,7 @@ const initPreview = async mode => {
   if (mode === "etheralmail") {
     return initEthermail();
   }
-  console.error (color.red("specify if you want mailhog or etheralmail for the preview"));
+  console.error (color.red("specify if you want mailhog or etheralmail for the preview"),mode);
 }
 
 const initMailhog = async () => {
