@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const fs = require("fs");
+const {flatten} = require("./util");
 require("dotenv").config();
 const {
   subject,
@@ -89,6 +90,16 @@ const dateFormat = (date) => {
   });
 };
 
+const checkToken = (tokens,variables) => {
+  const keys = Object.keys(flatten(variables));
+  const missing = tokens.filter ( k => { return !keys.includes(k.replace("- ",""))});
+  if (missing.length !== 0) {
+    console.error(color.red("incorrect or unknown tokens",missing));
+    process.exit(1);
+  }
+  return true;
+}
+ 
 const campaign = argv._[0];
 
 if (argv.help || !campaign) return help();
@@ -151,6 +162,8 @@ const prepare = async (target, templateName, campaign, data, last) => {
   delete variables.target.email;
   delete variables.target.externalId;
   delete variables.target.field;
+
+
   let s;
   let template;
 
@@ -186,7 +199,11 @@ const prepare = async (target, templateName, campaign, data, last) => {
     template = html(campaign, templateName, locale);
   }
 
+// TODO: get the template and tokens higher in the code and conditionally build variables to only be set if the token is required by the template, for instance don't fetch the top pictures if there aren't any top.picture 
   const tokens = getTokens(template);
+
+  checkToken (tokens,variables); // stops if there is a token that isn't set in variables
+
   if (argv.verbose) console.log("We need variables for each of these", tokens);
   if (!s) {
     console.error(color.red("Subject not found:", target.name));
