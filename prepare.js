@@ -18,7 +18,7 @@ const {
   getTopComments,
   getLastCount,
 } = require("./api");
-const { getTargets, filter } = require("./targets");
+const { getTargets, filter, shuffle } = require("./targets");
 const color = require("cli-color");
 const countries = require("i18n-iso-countries");
 const { preview, initPreview } = require("./mailer");
@@ -26,7 +26,7 @@ const { getStats } = require("./server");
 let csv = "name,email,saluation,gender,language,area,external_id";
 
 const argv = require("minimist")(process.argv.slice(2), {
-  boolean: ["help", "dry-run", "verbose", "csv"],
+  boolean: ["help", "dry-run", "verbose", "csv", "shuffle"],
   string: ["file", "lang", "template", "fallback", "preview"],
   //  unknown: (param) => {param[0] === '-' ? console.error("invalid parameter",param) || process.exit(1) : true},
   default: { template: "default", csv: true, min: 0 },
@@ -99,13 +99,13 @@ const checkToken = (tokens,variables) => {
   }
   return true;
 }
- 
+
 const campaign = argv._[0];
 
 if (argv.help || !campaign) return help();
 if (!argv.file) argv.file = campaign;
 let templateName = argv["template"]; // TODO: for each target, check if the target has received an email, "initial", otherwise, "default"
-const sourceName = argv["file"]; 
+const sourceName = argv["file"];
 const fallback = argv["fallback"] === "" ? "fallback" : argv["fallback"];
 console.log(
   color.green("timestamp of the digest", dateFormat(createdAt)),
@@ -163,7 +163,6 @@ const prepare = async (target, templateName, campaign, data, last) => {
   delete variables.target.externalId;
   delete variables.target.field;
 
-
   let s;
   let template;
 
@@ -199,7 +198,7 @@ const prepare = async (target, templateName, campaign, data, last) => {
     template = html(campaign, templateName, locale);
   }
 
-// TODO: get the template and tokens higher in the code and conditionally build variables to only be set if the token is required by the template, for instance don't fetch the top pictures if there aren't any top.picture 
+// TODO: get the template and tokens higher in the code and conditionally build variables to only be set if the token is required by the template, for instance don't fetch the top pictures if there aren't any top.picture
   const tokens = getTokens(template);
 
   checkToken (tokens,variables); // stops if there is a token that isn't set in variables
@@ -262,6 +261,8 @@ const main = async () => {
     await initPreview(argv.preview);
     csv + ",preview";
   }
+
+  if (argv.shuffle) targets = shuffle(targets);
 
   for (const i in targets) {
     const target = targets[i];

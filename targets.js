@@ -56,9 +56,9 @@ const getTargets = (fileName, campaign) => {
   return targets;
 };
 
-// filter can be a number (take first only n) or an email (take only the target with this email 
+// filter can be a number (take first only n) or an email (take only the target with this email
 const filter = (targets, criteria) => {
-  if (!criteria) 
+  if (!criteria)
     return targets;
   if (parseInt(criteria,10) > 0) {
     console.log("...but processing only", criteria);
@@ -76,4 +76,16 @@ const filter = (targets, criteria) => {
   throw new Error ("don't know how to filter ",criteria);
 }
 
-module.exports = {getTargets, filter };
+const shuffle = (targets) => {
+
+  const shuffled = [...targets];
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  };
+
+  return shuffled;
+};
+
+module.exports = {getTargets, filter, shuffle };
