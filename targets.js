@@ -56,9 +56,9 @@ const getTargets = (fileName, campaign) => {
   return targets;
 };
 
-// filter can be a number (take first only n) or an email (take only the target with this email 
+// filter can be a number (take first only n) or an email (take only the target with this email
 const filter = (targets, criteria) => {
-  if (!criteria) 
+  if (!criteria)
     return targets;
   if (parseInt(criteria,10) > 0) {
     console.log("...but processing only", criteria);
