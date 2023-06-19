@@ -78,14 +78,12 @@ const filter = (targets, criteria) => {
 
 const shuffle = (targets) => {
 
-  const shuffled = [...targets];
-
-  for (let i = shuffled.length - 1; i > 0; i--) {
+  for (let i = targets.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    [targets[i], targets[j]] = [targets[j], targets[i]];
   };
 
-  return shuffled;
+  return targets;
 };
 
 module.exports = {getTargets, filter, shuffle };
