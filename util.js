@@ -41,7 +41,17 @@ const flatten = (deepObject) => {
   return flatObject;
 }
 
-module.exports = { flatten, unflatten };
+const shuffle = (targets) => {
+
+  for (let i = targets.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [targets[i], targets[j]] = [targets[j], targets[i]];
+  };
+
+  return targets;
+};
+
+module.exports = { flatten, unflatten, shuffle };
 
 //console.log(flatten ({a:{b:{c:"aa"}}}));
 //console.log(unflatten ({"a.b.c":"aa"}));

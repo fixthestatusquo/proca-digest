@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const fs = require("fs");
-const {flatten} = require("./util");
+const {flatten, shuffle} = require("./util");
 require("dotenv").config();
 const {
   subject,
@@ -18,7 +18,7 @@ const {
   getTopComments,
   getLastCount,
 } = require("./api");
-const { getTargets, filter, shuffle } = require("./targets");
+const { getTargets, filter } = require("./targets");
 const color = require("cli-color");
 const countries = require("i18n-iso-countries");
 const { preview, initPreview } = require("./mailer");

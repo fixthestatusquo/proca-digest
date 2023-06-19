@@ -76,14 +76,4 @@ const filter = (targets, criteria) => {
   throw new Error ("don't know how to filter ",criteria);
 }
 
-const shuffle = (targets) => {
-
-  for (let i = targets.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [targets[i], targets[j]] = [targets[j], targets[i]];
-  };
-
-  return targets;
-};
-
-module.exports = {getTargets, filter, shuffle };
+module.exports = {getTargets, filter };
