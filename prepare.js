@@ -262,7 +262,7 @@ const main = async () => {
     csv + ",preview";
   }
 
-  if (argv.shuffle) targets = shuffle(targets);
+  if (argv.shuffle) shuffle(targets);
 
   for (const i in targets) {
     const target = targets[i];
