@@ -84,15 +84,23 @@ const subject = (campaign, name, lang) => {
   let config = JSON.parse(fs.readFileSync(p, "utf8"));
   if (!config.meta?.subject) {
     let p = resolve(campaign, name, "en", "json");
-    config = JSON.parse(fs.readFileSync(p, "utf8")); 
+    config = JSON.parse(fs.readFileSync(p, "utf8"));
   }
   if (!config.meta.subject) return;
   return pickOne(config.meta.subject);
 };
 
-const insertVariables = (template, variables) => {
+const getExtra = (area, campaign) => {
+  const p = path.resolve(
+    __dirname,
+    configFolder + `campaign/${campaign}_extra.json`
+  );
+  return fs.existsSync(p)
+    ? JSON.parse(fs.readFileSync(p, "utf8")).config?.locales?.en[area.toLowerCase()]
+    : 0
+}
 
-  // insert variables in templates code here
+const insertVariables = (template, variables) => {
   return i18next.t(template, {
     ...variables,
     interpolation: { escapeValue: false },
@@ -145,4 +153,4 @@ const getFallback = (fallbackFile) => {
   return fs.readFileSync(p, "utf8");
 }
 
-module.exports = { subject, html, insertVariables, getTokens, getLetter, getFallback, getCampaign, getSender };
+module.exports = { subject, html, insertVariables, getTokens, getLetter, getFallback, getCampaign, getSender,getExtra };
