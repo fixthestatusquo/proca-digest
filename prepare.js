@@ -10,6 +10,7 @@ const {
   getLetter,
   getFallback,
   getSender,
+  getExtra
 } = require("./template");
 const {
   supabase,
@@ -137,19 +138,23 @@ const prepare = async (target, templateName, campaign, data, last) => {
   const locale = argv.locale || target.locale;
   const pics = await getTopPics(campaign, target.area);
   const comments = await getTopComments(campaign, target.area);
+
+  //extra supporters per country
+  let extra = getExtra(target.area, campaign);
+
   let variables = {
     target: { ...target },
     country: {
       code: target.area,
       name: countries.getName(target.area, locale) || "",
-      total: data.country[target.area],
+      total: data.country[target.area] + extra,
     },
     total: data.total,
     campaign: {
       letter: getLetter(campaign, locale),
       period: {
         total: data.total - last.lastTotal,
-        country: data.country[target.area] - last.lastCountryTotal,
+        country: data.country[target.area] + extra - last.lastCountryTotal,
       },
     },
     top: {
@@ -162,6 +167,9 @@ const prepare = async (target, templateName, campaign, data, last) => {
   delete variables.target.email;
   delete variables.target.externalId;
   delete variables.target.field;
+
+  console.log(`${target.area} total, without and with extra (${extra}):`, data.country[target.area], variables.country.total);
+  console.log(`${target.area} delta, without and with extra (${extra})::`, data.country[target.area] - last.lastCountryTotal, variables.campaign.period.country);
 
   let s;
   let template;
