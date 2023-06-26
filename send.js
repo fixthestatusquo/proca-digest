@@ -9,8 +9,8 @@ const { sendDigest, init } = require("./mailer");
 
 
 const pause = (time) => {
-    if (!time) { 
-      const min = 19; max = 93; // wait between 19 second and 1.5min
+    if (!time) {
+      const min = 7; max = 42; // wait between 7 seconds and 0.7 min
       time = Math.floor(Math.random() * (max - min + 1) + min) *1000;
       console.log("waiting",time/1000);
     }
