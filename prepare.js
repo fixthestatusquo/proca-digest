@@ -18,6 +18,7 @@ const {
   getTopPics,
   getTopComments,
   getLastCount,
+  getEmailsSent,
 } = require("./api");
 const { getTargets, filter } = require("./targets");
 const color = require("cli-color");
@@ -264,6 +265,9 @@ const main = async () => {
       process.exit(1);
     }
   }
+
+  const emailsSent = await getEmailsSent();
+
   targets = filter(targets, argv.target);
   if (argv.preview !== undefined) {
     await initPreview(argv.preview);
@@ -277,6 +281,11 @@ const main = async () => {
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
     csv += `\n${target.name},${target.email},${target.salutation},${target.gender},${target.locale},${target.area},${target.externalId}`;
+
+    if (!emailsSent.includes(target.email)) {
+      console.log(`Changing template to initial, no emails sent to ${target.email} so far`)
+      templateName = 'initial';
+    }
     const last =
       templateName === "initial"
         ? { lastTotal: 0, lastCountryTotal: 0 }
