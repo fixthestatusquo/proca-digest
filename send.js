@@ -99,6 +99,8 @@ if (require.main === module) {
     if (!argv.to && !argv['dry-run']) {
       await confirm();
     }
+console.log(color.blue ("start ",new Date().toString()));
+
     for (const i in targets) {
       const target = targets[i];
       // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
@@ -129,6 +131,7 @@ if (require.main === module) {
         await pause();
       }
     }
+  console.log(color.blue ("end ",new Date().toString()));
   };
 
   main().then ( () => process.exit(0)).catch(console.error);
