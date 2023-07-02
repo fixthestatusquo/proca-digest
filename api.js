@@ -151,6 +151,16 @@ const getLastCount = async (campaign, email) => {
   };
 };
 
+const getEmailsSent = async () => {
+  const q = supabase.from("emails_sent").select();
+  const { data, error } = await q;
+  if (error) {
+    console.error("Can't get the list of emails with digest already sent");
+    return;
+  }
+  return Object.values(data).map(i => i.email);
+}
+
 module.exports = {
   supabase,
   getDigests,
@@ -159,4 +169,5 @@ module.exports = {
   getTopComments,
   setStatus,
   getLastCount,
+  getEmailsSent
 };
