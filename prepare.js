@@ -25,7 +25,7 @@ const color = require("cli-color");
 const countries = require("i18n-iso-countries");
 const { preview, initPreview } = require("./mailer");
 const { getStats } = require("./server");
-let csv = "name,email,saluation,gender,language,area,external_id";
+let csv = "name,email,saluation,gender,language,area,external_id, template";
 
 const argv = require("minimist")(process.argv.slice(2), {
   boolean: ["help", "dry-run", "verbose", "csv", "shuffle"],
@@ -280,7 +280,6 @@ const main = async () => {
     const target = targets[i];
     // todo: if template not set, supabase.select email,target_id from digests where campaign=campaign and status='sent' group by email
     // if in that list -> template= default, else -> initial
-    csv += `\n${target.name},${target.email},${target.salutation},${target.gender},${target.locale},${target.area},${target.externalId}`;
 
     if (!emailsSent.includes(target.email)) {
       console.log(`Changing template to initial, no emails sent to ${target.email} so far`)
@@ -290,6 +289,9 @@ const main = async () => {
       templateName === "initial"
         ? { lastTotal: 0, lastCountryTotal: 0 }
         : await getLastCount(campaign, target.email);
+
+    csv += `\n${target.name},${target.email},${target.salutation},${target.gender},${target.locale},${target.area},${target.externalId},${templateName}`;
+
 
     const r = await prepare(
       { ...targets[i] },
