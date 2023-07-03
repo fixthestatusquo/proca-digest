@@ -155,6 +155,7 @@ const prepare = async (target, templateName, campaign, data, last) => {
       period: {
         total: data.total - last.lastTotal,
         country: data.country[target.area] + extra - last.lastCountryTotal,
+        extra: extra;
       },
     },
     top: {
