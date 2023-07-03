@@ -148,7 +148,6 @@ const prepare = async (target, templateName, campaign, data, last) => {
       code: target.area,
       name: countries.getName(target.area, locale) || "",
       total: data.country[target.area] + extra,
-      extra: extra;
     },
     total: data.total,
     campaign: {
@@ -156,7 +155,7 @@ const prepare = async (target, templateName, campaign, data, last) => {
       period: {
         total: data.total - last.lastTotal,
         country: data.country[target.area] + extra - last.lastCountryTotal,
-        extra: extra - last.lastCountryExtra;
+        extra: extra;
       },
     },
     top: {
@@ -281,7 +280,7 @@ const main = async () => {
     csv += `\n${target.name},${target.email},${target.salutation},${target.gender},${target.locale},${target.area},${target.externalId}`;
     const last =
       templateName === "initial"
-        ? { lastTotal: 0, lastCountryTotal: 0, lastCountryExtra:0 }
+        ? { lastTotal: 0, lastCountryTotal: 0 }
         : await getLastCount(campaign, target.email);
 
     const r = await prepare(
