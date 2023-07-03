@@ -168,8 +168,8 @@ const prepare = async (target, templateName, campaign, data, last) => {
   delete variables.target.externalId;
   delete variables.target.field;
 
-  console.log(`${target.area} total, without and with extra (${extra}):`, data.country[target.area], variables.country.total);
-  console.log(`${target.area} delta, without and with extra (${extra})::`, data.country[target.area] - last.lastCountryTotal, variables.campaign.period.country);
+  console.log(`${target.area} new and old total`, variables.total, last.lastTotal);
+  console.log(`${target.area} new country total, old country total and country delta:`, data.country[target.area] + extra, last.lastCountryTotal, variables.campaign.period.country);
 
   let s;
   let template;
