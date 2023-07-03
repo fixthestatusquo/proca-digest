@@ -29,7 +29,7 @@ let csv = "name,email,saluation,gender,language,area,external_id";
 const argv = require("minimist")(process.argv.slice(2), {
   boolean: ["help", "dry-run", "verbose", "csv", "shuffle"],
   string: ["file", "lang", "template", "fallback", "preview"],
-  //  unknown: (param) => {param[0] === '-' ? console.error("invalid parameter",param) || process.exit(1) : true},
+  unknown: (param) => {param[0] === '-' ? console.error("invalid parameter",param) || process.exit(1) : true},
   default: { template: "default", csv: true, min: 0, shuffle: true },
 });
 
