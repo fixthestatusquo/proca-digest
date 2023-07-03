@@ -148,6 +148,7 @@ const prepare = async (target, templateName, campaign, data, last) => {
       code: target.area,
       name: countries.getName(target.area, locale) || "",
       total: data.country[target.area] + extra,
+      extra: extra,
     },
     total: data.total,
     campaign: {
