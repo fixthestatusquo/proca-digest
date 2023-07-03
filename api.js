@@ -143,11 +143,12 @@ const getLastCount = async (campaign, email) => {
   const { data, error } = await q;
 
   if (error) console.log("error getting last count for" + email, error);
-  if (!data) return { lastTotal: 0, lastCountryTotal: 0 };
+  if (!data) return { lastTotal: 0, lastCountryTotal: 0, lastCountryExtra:0 };
 
   return {
     lastTotal: data.variables?.total || 0,
     lastCountryTotal: data.variables?.country?.total || 0,
+    lastCountryExtra: data.variables?.country?.extra || 0,
   };
 };
 
